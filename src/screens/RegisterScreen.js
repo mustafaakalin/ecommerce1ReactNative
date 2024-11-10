@@ -22,28 +22,35 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleRegister = async () => {
     if (!formData.name || !formData.email || !formData.password || !formData.password_confirmation) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      Alert.alert('Error', 'Please fill all fields');
       return;
     }
-
+  
     if (formData.password !== formData.password_confirmation) {
-      Alert.alert('Hata', 'Şifreler eşleşmiyor');
+      Alert.alert('Error', 'Passwords do not match');
       return;
     }
-
+  
     setLoading(true);
     try {
-      const response = await apiClient.post('/register', formData);
-      
-      if (response.token) {
-        await authService.setToken(response.token);
-        await authService.setUser(response.user);
-        navigation.replace('MainApp');
+      const response = await fetch('http://192.168.1.12:2121/api/v1/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        await AsyncStorage.setItem('authToken', data.token);
+        navigation.replace('MainTabs');
       } else {
-        Alert.alert('Hata', response.message || 'Kayıt işlemi başarısız');
+        Alert.alert('Error', data.message || 'Registration failed');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Kayıt olurken bir hata oluştu');
+      Alert.alert('Error', 'An error occurred during registration');
     } finally {
       setLoading(false);
     }

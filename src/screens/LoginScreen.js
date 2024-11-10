@@ -1,4 +1,3 @@
-// src/screens/LoginScreen.js
 import React, { useState } from 'react';
 import {
   View,
@@ -8,6 +7,7 @@ import {
   StyleSheet,
   Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://192.168.1.12:2121/api/login', {
+      const response = await fetch('http://192.168.1.12:2121/api/v1/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -25,27 +25,26 @@ const LoginScreen = ({ navigation }) => {
           password,
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
-        // Token'ı AsyncStorage'a kaydet
-        // Ana sayfaya yönlendir
-        navigation.replace('Home');
+        await AsyncStorage.setItem('authToken', data.token);
+        navigation.replace('MainTabs');
       } else {
-        Alert.alert('Hata', data.message);
+        Alert.alert('Error', data.message || 'Login failed');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Giriş yapılırken bir hata oluştu');
+      Alert.alert('Error', 'An error occurred during login');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Giriş Yap</Text>
+      <Text style={styles.title}>Login</Text>
       <TextInput
         style={styles.input}
-        placeholder="E-posta"
+        placeholder="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -53,16 +52,16 @@ const LoginScreen = ({ navigation }) => {
       />
       <TextInput
         style={styles.input}
-        placeholder="Şifre"
+        placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
       />
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Giriş Yap</Text>
+        <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <Text style={styles.linkText}>Hesabınız yok mu? Kayıt olun</Text>
+        <Text style={styles.linkText}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </View>
   );

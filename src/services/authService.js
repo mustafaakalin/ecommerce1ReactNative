@@ -18,10 +18,12 @@ const authService = {
 
   logout: async () => {
     try {
-      await AsyncStorage.removeItem('@auth_token');
+      await apiClient.post('/logout');
+      await AsyncStorage.removeItem('authToken');
       return { success: true };
     } catch (error) {
-      return { success: false, message: error.message };
+      console.error('Error logging out:', error);
+      return { success: false, error: error.message };
     }
   },
 

@@ -1,4 +1,3 @@
-// src/screens/HomeScreen.js
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,7 +8,9 @@ import {
   StyleSheet,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import apiClient from '../services/apiClient';
 
 const HomeScreen = ({ navigation }) => {
@@ -52,7 +53,17 @@ const HomeScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchProducts();
+    const checkAuthStatus = async () => {
+      const token = await AsyncStorage.getItem('authToken');
+      if (!token) {
+        Alert.alert('Please log in to continue');
+        navigation.replace('Login');
+      } else {
+        fetchProducts();
+      }
+    };
+
+    checkAuthStatus();
   }, []);
 
   const renderProduct = ({ item }) => (

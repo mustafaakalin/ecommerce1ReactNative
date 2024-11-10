@@ -22,11 +22,11 @@ const ProfileScreen = ({ navigation }) => {
 
   const fetchProfile = async () => {
     try {
-      const response = await apiClient.get('/profile');
+      const response = await apiClient.get('/user');
       setProfile(response.data);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      Alert.alert('Hata', 'Profil bilgileri yüklenirken bir hata oluştu');
+      Alert.alert('Error', 'Unable to load profile information');
     } finally {
       setLoading(false);
     }
@@ -41,10 +41,10 @@ const ProfileScreen = ({ navigation }) => {
           routes: [{ name: 'Login' }],
         });
       } else {
-        Alert.alert('Hata', result.error || 'Çıkış yapılırken bir hata oluştu');
+        Alert.alert('Error', result.error || 'An error occurred while logging out');
       }
     } catch (error) {
-      Alert.alert('Hata', 'Çıkış yapılırken bir hata oluştu');
+      Alert.alert('Error', 'An error occurred while logging out');
     }
   };
 
