@@ -1,95 +1,49 @@
 // src/navigation/AppNavigator.js
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import authService from '../services/authService';
 
+// Screens
+import HomeScreen from '../screens/HomeScreen';
+import CategoryScreen from '../screens/CategoryScreen';
+import ProductDetailScreen from '../screens/ProductDetailScreen';
+// import CartScreen from '../screens/CartScreen';
+import ProfileScreen from '../screens/ProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
-import HomeScreen from '../screens/HomeScreen';
-import ProductDetailScreen from '../screens/ProductDetailScreen';
-import CategoryScreen from '../screens/CategoryScreen';
-import ProfileScreen from '../screens/ProfileScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabNavigator() {
+const MainTabs = () => {
   return (
     <Tab.Navigator>
-      <Tab.Screen 
-        name="Home" 
-        component={HomeScreen} 
-        options={{ title: 'Anasayfa' }}
-      />
-      <Tab.Screen 
-        name="Categories" 
-        component={CategoryScreen} 
-        options={{ title: 'Kategoriler' }}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen} 
-        options={{ title: 'Profil' }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} />
+      <Tab.Screen name="Categories" component={CategoryScreen} />
+      {/* <Tab.Screen name="Cart" component={CartScreen} /> */}
+      <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
-}
+};
 
-function AppNavigator() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const checkAuthStatus = async () => {
-    const isAuth = await authService.isAuthenticated();
-    setIsAuthenticated(isAuth);
-    setIsLoading(false);
-  };
-
-  if (isLoading) {
-    return null; // veya loading spinner
-  }
-
+const AppNavigator = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={isAuthenticated ? "MainApp" : "Login"}>
-        {/* Auth Screens */}
+      <Stack.Navigator>
         <Stack.Screen 
-          name="Login" 
-          component={LoginScreen} 
+          name="MainTabs" 
+          component={MainTabs} 
           options={{ headerShown: false }}
         />
-        <Stack.Screen 
-          name="Register" 
-          component={RegisterScreen} 
-          options={{ title: 'Kayıt Ol' }}
-        />
-        
-        {/* Main App Screens */}
-        <Stack.Screen 
-          name="MainApp" 
-          component={TabNavigator} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="ProductDetail" 
-          component={ProductDetailScreen} 
-          options={{ title: 'Ürün Detayı' }}
-        />
-        <Stack.Screen 
-          name="Checkout" 
-          component={CheckoutScreen} 
-          options={{ title: 'Ödeme' }}
-        />
+        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="Checkout" component={CheckoutScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
-}
+};
 
 export default AppNavigator;

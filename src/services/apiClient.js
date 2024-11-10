@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_URL = 'http://192.168.1.12:2121/api';
+const API_URL = 'http://192.168.1.12:2121/api/v1';
 
 const handleResponse = async (response) => {
   const data = await response.json();

@@ -61,7 +61,7 @@ const HomeScreen = ({ navigation }) => {
       onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
     >
       <Image
-        source={{ uri: item.image }}
+        source={{ uri: item.image_path }}
         style={styles.productImage}
         resizeMode="cover"
       />
