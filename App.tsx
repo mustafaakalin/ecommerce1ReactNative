@@ -6,6 +6,8 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
+import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
+import { CategoryDetailScreen } from './src/screens/CategoryDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
