@@ -17,10 +17,19 @@ export const LoginScreen = ({ navigation }: any) => {
   const { login, loading } = useAuth();
 
   const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      return;
+    }
+
     try {
       await login(email, password);
-    } catch (error) {
-      Alert.alert('Error', 'Invalid credentials');
+      Alert.alert('Başarılı', 'Giriş yapıldı');
+    } catch (error: any) {
+      Alert.alert(
+        'Hata',
+        error.response?.data?.message || 'Giriş yapılırken bir hata oluştu'
+      );
     }
   };
 

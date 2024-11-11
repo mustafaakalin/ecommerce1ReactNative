@@ -19,10 +19,24 @@ export const RegisterScreen = ({ navigation }: any) => {
   const { register, loading } = useAuth();
 
   const handleRegister = async () => {
+    if (!name || !email || !password || !passwordConfirmation) {
+      Alert.alert('Hata', 'Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    if (password !== passwordConfirmation) {
+      Alert.alert('Hata', 'Şifreler eşleşmiyor');
+      return;
+    }
+
     try {
       await register(name, email, password, passwordConfirmation);
-    } catch (error) {
-      Alert.alert('Error', 'Registration failed');
+      Alert.alert('Başarılı', 'Hesabınız başarıyla oluşturuldu');
+    } catch (error: any) {
+      Alert.alert(
+        'Hata',
+        error.response?.data?.message || 'Kayıt olurken bir hata oluştu'
+      );
     }
   };
 
