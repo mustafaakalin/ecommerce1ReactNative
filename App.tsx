@@ -1,53 +1,75 @@
 // App.tsx
-import React, { useEffect } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { AuthProvider, useAuth } from './src/context/AuthContext';
+import { AuthProvider } from './src/context/AuthContext';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { RegisterScreen } from './src/screens/RegisterScreen';
 import { HomeScreen } from './src/screens/HomeScreen';
 import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
 import { CategoryDetailScreen } from './src/screens/CategoryDetailScreen';
 
-const Stack = createNativeStackNavigator();
+export type RootStackParamList = {
+  Login: undefined;
+  Register: undefined;
+  Home: undefined;
+  ProductDetail: { slug: string };
+  CategoryDetail: { slug: string };
+};
 
-function AppNavigator() {
-  const { user } = useAuth();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
+const App = () => {
   return (
-    <Stack.Navigator>
-      {!user ? (
-        // Auth screens
-        <>
-          <Stack.Screen 
-            name="Login" 
+    <NavigationContainer>
+      <AuthProvider>
+        <Stack.Navigator
+          initialRouteName="Login"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: '#fff',
+            },
+            headerTintColor: '#000',
+            headerTitleStyle: {
+              fontWeight: 'bold',
+            },
+          }}
+        >
+          <Stack.Screen
+            name="Login"
             component={LoginScreen}
             options={{ headerShown: false }}
           />
-          <Stack.Screen 
-            name="Register" 
+          <Stack.Screen
+            name="Register"
             component={RegisterScreen}
             options={{ headerShown: false }}
           />
-        </>
-      ) : (
-        // App screens
-        <Stack.Screen 
-          name="Home" 
-          component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-      )}
-    </Stack.Navigator>
+          <Stack.Screen
+            name="Home"
+            component={HomeScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProductDetail"
+            component={ProductDetailScreen}
+            options={({ route }) => ({
+              title: 'Ürün Detayı',
+              headerBackTitleVisible: false,
+            })}
+          />
+          <Stack.Screen
+            name="CategoryDetail"
+            component={CategoryDetailScreen}
+            options={({ route }) => ({
+              title: 'Kategori Ürünleri',
+              headerBackTitleVisible: false,
+            })}
+          />
+        </Stack.Navigator>
+      </AuthProvider>
+    </NavigationContainer>
   );
-}
+};
 
-export default function App() {
-  return (
-    <AuthProvider>
-      <NavigationContainer>
-        <AppNavigator />
-      </NavigationContainer>
-    </AuthProvider>
-  );
-}
+export default App;
