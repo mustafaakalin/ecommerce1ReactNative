@@ -1,4 +1,3 @@
-// src/components/ProductCard.tsx
 import React from 'react';
 import { TouchableOpacity, Image, Text, StyleSheet, View } from 'react-native';
 
@@ -9,8 +8,11 @@ interface ProductCardProps {
   rating: string;
   isNew: boolean;
   discount?: number;
+  images: Array<{ image_path: string }>;
   onPress: () => void;
 }
+
+const BASE_URL = 'http://192.168.1.12:2121/storage/';
 
 export const ProductCard = ({ 
   name, 
@@ -19,12 +21,15 @@ export const ProductCard = ({
   rating, 
   isNew, 
   discount, 
+  images = [], 
   onPress 
 }: ProductCardProps) => {
+  const imageUrl = images.length > 0 && images[0].image_path ? `${BASE_URL}${images[0].image_path}` : 'http://192.168.1.12:2121/default_product_image.jpg';
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
       <Image 
-        source={{ uri: 'default_product_image.jpg' }} 
+        source={{ uri: imageUrl }} 
         style={styles.image} 
       />
       {isNew && <View style={styles.newBadge}><Text style={styles.newText}>Yeni</Text></View>}

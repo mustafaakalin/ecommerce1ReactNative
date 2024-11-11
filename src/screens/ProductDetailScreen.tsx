@@ -1,4 +1,3 @@
-// src/screens/ProductDetailScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -12,7 +11,8 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { RootStackParamList } from '../types/navigation';
-
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductDetail'>;
 type RoutePropType = RouteProp<RootStackParamList, 'ProductDetail'>;
@@ -27,9 +27,9 @@ interface ProductDetail {
   name: string;
   description: string;
   price: string;
-  old_price: string;
+  old_price: string | null;
   stock: number;
-  rating: string;
+  rating: string | null;
   is_new: boolean;
   discount: number;
   specifications: Record<string, any>;
@@ -39,6 +39,8 @@ interface ProductDetail {
     slug: string;
   };
 }
+
+const BASE_URL = 'http://192.168.1.12:2121/storage/';
 
 export const ProductDetailScreen = ({ route, navigation }: Props) => {
   const { slug } = route.params;
@@ -85,14 +87,22 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
         showsHorizontalScrollIndicator={false}
         style={styles.imageContainer}
       >
-        {product.images.map((image, index) => (
+        {product.images.length > 0 ? (
+          product.images.map((image, index) => (
+            <Image
+              key={index}
+              source={{ uri: `${BASE_URL}${image.image_path}` }}
+              style={styles.image}
+              resizeMode="cover"
+            />
+          ))
+        ) : (
           <Image
-            key={index}
-            source={{ uri: image.image_path }}
+            source={{ uri: 'http://192.168.1.12:2121/default_product_image.jpg' }}
             style={styles.image}
             resizeMode="cover"
           />
-        ))}
+        )}
       </ScrollView>
 
       {/* Ürün Bilgileri */}
@@ -118,7 +128,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
         </View>
 
         <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>★ {product.rating}</Text>
+          <Text style={styles.rating}>★ {product.rating || 'N/A'}</Text>
           <Text style={styles.stock}>
             Stok: {product.stock} adet
           </Text>
@@ -256,3 +266,5 @@ const styles = StyleSheet.create({
     color: '#333',
   },
 });
+
+export default ProductDetailScreen;

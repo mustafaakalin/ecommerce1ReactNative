@@ -23,7 +23,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface Props {
     navigation: NavigationProp;
   }
-
+  
 interface Category {
   id: number;
   name: string;
@@ -36,11 +36,11 @@ interface Product {
   id: number;
   name: string;
   price: string;
-  old_price: string | null;
+  old_price: string;
   rating: string;
   is_new: boolean;
-  discount: number | null;
-  images: string[];
+  discount: number;
+    images: Array<{ image_path: string }>;  
   slug: string;
 }
 
@@ -137,6 +137,7 @@ export const HomeScreen = ({ navigation }: any) => {
                 rating={product.rating}
                 isNew={product.is_new}
                 discount={product.discount}
+                images={product.images || []}  // Undefined kontrolü eklendi
                 onPress={() => handleProductPress(product.slug)}
               />
             ))}
