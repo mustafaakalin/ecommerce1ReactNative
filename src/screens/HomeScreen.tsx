@@ -23,7 +23,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface Props {
     navigation: NavigationProp;
   }
-  
+
 interface Category {
   id: number;
   name: string;
@@ -36,10 +36,11 @@ interface Product {
   id: number;
   name: string;
   price: string;
-  old_price: string;
+  old_price: string | null;
   rating: string;
   is_new: boolean;
-  discount: number;
+  discount: number | null;
+  images: string[];
   slug: string;
 }
 
