@@ -2,6 +2,7 @@
 import React, { createContext, useState, useContext } from 'react';
 import { User } from '../types/auth';
 import api, { setAuthToken } from '../services/api';
+import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextData {
@@ -57,13 +58,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await api.post('/logout');
+      await api.post('/logout'); // Backend'e logout isteği
+      // Local storage'dan token ve kullanıcı bilgilerini temizle
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
       setUser(null);
-      setAuthToken('');
-      await AsyncStorage.removeItem('@auth_token');
-      await AsyncStorage.removeItem('@user');
     } catch (error) {
       console.error('Logout error:', error);
+      // Hata olsa bile local storage'ı temizle ve kullanıcıyı çıkış yaptır
+      await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('user');
+      setUser(null);
+      throw error; // Hata yönetimi için hatayı yeniden fırlat
     }
   };
 
