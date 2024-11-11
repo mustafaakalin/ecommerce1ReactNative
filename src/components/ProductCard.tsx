@@ -1,0 +1,123 @@
+// src/components/ProductCard.tsx
+import React from 'react';
+import { TouchableOpacity, Image, Text, StyleSheet, View } from 'react-native';
+
+interface ProductCardProps {
+  name: string;
+  price: string;
+  oldPrice?: string;
+  rating: string;
+  isNew: boolean;
+  discount?: number;
+  onPress: () => void;
+}
+
+export const ProductCard = ({ 
+  name, 
+  price, 
+  oldPrice, 
+  rating, 
+  isNew, 
+  discount, 
+  onPress 
+}: ProductCardProps) => {
+  return (
+    <TouchableOpacity style={styles.card} onPress={onPress}>
+      <Image 
+        source={{ uri: 'default_product_image.jpg' }} 
+        style={styles.image} 
+      />
+      {isNew && <View style={styles.newBadge}><Text style={styles.newText}>Yeni</Text></View>}
+      {discount && (
+        <View style={styles.discountBadge}>
+          <Text style={styles.discountText}>%{discount}</Text>
+        </View>
+      )}
+      <Text style={styles.name} numberOfLines={2}>{name}</Text>
+      <View style={styles.priceContainer}>
+        <Text style={styles.price}>{price} TL</Text>
+        {oldPrice && <Text style={styles.oldPrice}>{oldPrice} TL</Text>}
+      </View>
+      <View style={styles.ratingContainer}>
+        <Text style={styles.rating}>★ {rating}</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+const styles = StyleSheet.create({
+  card: {
+    width: '48%',
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 16,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  image: {
+    width: '100%',
+    height: 150,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  priceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  price: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginRight: 6,
+  },
+  oldPrice: {
+    fontSize: 12,
+    color: '#666',
+    textDecorationLine: 'line-through',
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  rating: {
+    fontSize: 12,
+    color: '#f39c12',
+  },
+  newBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: '#2ecc71',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  newText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  discountBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#e74c3c',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  discountText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+});

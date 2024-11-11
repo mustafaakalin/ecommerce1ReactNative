@@ -1,65 +1,138 @@
 // src/screens/HomeScreen.tsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Text,
   SafeAreaView,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { CategoryCard } from '../components/CategoryCard';
+import { ProductCard } from '../components/ProductCard';
+import api from '../services/api';
 
-export const HomeScreen = () => {
+interface Category {
+  id: number;
+  name: string;
+  icon: string;
+  products_count: number;
+  slug: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  price: string;
+  old_price: string;
+  rating: string;
+  is_new: boolean;
+  discount: number;
+  slug: string;
+}
+
+export const HomeScreen = ({ navigation }: any) => {
   const { user, logout } = useAuth();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleLogout = async () => {
+  const fetchData = async () => {
     try {
-      await logout();
+      setLoading(true);
+      const [categoriesResponse, productsResponse] = await Promise.all([
+        api.get('/categories'),
+        api.get('/products'),
+      ]);
+      setCategories(categoriesResponse.data);
+      setProducts(productsResponse.data.data);
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
     }
   };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleCategoryPress = (slug: string) => {
+    // Kategori detay sayfasına yönlendirme yapılacak
+    navigation.navigate('CategoryDetail', { slug });
+  };
+
+  const handleProductPress = (slug: string) => {
+    // Ürün detay sayfasına yönlendirme yapılacak
+    navigation.navigate('ProductDetail', { slug });
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.welcomeText}>Hoş geldin, {user?.name}</Text>
-        <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}>
+        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
           <Text style={styles.logoutText}>Çıkış Yap</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>Kategoriler</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {/* Kategori kartları buraya gelecek */}
+            {categories.map((category) => (
+              <CategoryCard
+                key={category.id}
+                name={category.name}
+                icon={category.icon}
+                productsCount={category.products_count}
+                onPress={() => handleCategoryPress(category.slug)}
+              />
+            ))}
           </ScrollView>
         </View>
 
         <View style={styles.productsSection}>
-          <Text style={styles.sectionTitle}>Öne Çıkan Ürünler</Text>
+          <Text style={styles.sectionTitle}>Ürünler</Text>
           <View style={styles.productsGrid}>
-            {/* Ürün kartları buraya gelecek */}
+            {products.map((product) => (
+              <ProductCard
+                key={product.id}
+                name={product.name}
+                price={product.price}
+                oldPrice={product.old_price}
+                rating={product.rating}
+                isNew={product.is_new}
+                discount={product.discount}
+                onPress={() => handleProductPress(product.slug)}
+              />
+            ))}
           </View>
         </View>
       </ScrollView>
-
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text>Ana Sayfa</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text>Kategoriler</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text>Sepetim</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text>Profil</Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -68,6 +141,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     flexDirection: 'row',
@@ -106,16 +184,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 12,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
-  },
-  navItem: {
-    alignItems: 'center',
   },
 });
