@@ -11,6 +11,16 @@ import {
   Dimensions,
 } from 'react-native';
 import api from '../services/api';
+import { RootStackParamList } from '../types/navigation';
+
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductDetail'>;
+type RoutePropType = RouteProp<RootStackParamList, 'ProductDetail'>;
+
+interface Props {
+  navigation: NavigationProp;
+  route: RoutePropType;
+}
 
 interface ProductDetail {
   id: number;
@@ -30,7 +40,7 @@ interface ProductDetail {
   };
 }
 
-export const ProductDetailScreen = ({ route, navigation }: any) => {
+export const ProductDetailScreen = ({ route, navigation }: Props) => {
   const { slug } = route.params;
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);

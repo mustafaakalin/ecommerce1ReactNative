@@ -14,7 +14,16 @@ import { useAuth } from '../context/AuthContext';
 import { CategoryCard } from '../components/CategoryCard';
 import { ProductCard } from '../components/ProductCard';
 import api from '../services/api';
+import { RootStackParamList } from '../types/navigation';
 
+// Navigation prop type tanımı
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// Props interface'i
+interface Props {
+    navigation: NavigationProp;
+  }
+  
 interface Category {
   id: number;
   name: string;
