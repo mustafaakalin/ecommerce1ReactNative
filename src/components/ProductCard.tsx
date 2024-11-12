@@ -1,6 +1,7 @@
 import React from 'react';
 import { TouchableOpacity, Image, Text, StyleSheet, View, Alert } from 'react-native';
 import { useCart } from '../context/CartContext';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi
 
 interface ProductCardProps {
   id: number;
@@ -27,14 +28,18 @@ export const ProductCard = ({
   images = [],
   onPress
 }: ProductCardProps) => {
+  
   const { addToCart, loading } = useCart();
   const imageUrl = images.length > 0 && images[0].image_path ? `${BASE_URL}${images[0].image_path}` : 'http://192.168.1.12:2121/default_product_image.jpg';
 
+
   const handleAddToCart = async () => {
     try {
-      await addToCart(id, 1); // id prop olarak eklenmeli
+      console.log('Adding product with ID:', id); // ID'yi kontrol et
+      await addToCart(id, 1);
       Alert.alert('Başarılı', 'Ürün sepete eklendi.');
     } catch (error) {
+      console.error('Error in handleAddToCart:', error); // Hata detayını gör
       Alert.alert('Hata', 'Ürün sepete eklenirken bir hata oluştu.');
     }
   };
@@ -45,7 +50,11 @@ export const ProductCard = ({
         source={{ uri: imageUrl }}
         style={styles.image}
       />
-      {isNew && <View style={styles.newBadge}><Text style={styles.newText}>Yeni</Text></View>}
+      {isNew && (
+        <View style={styles.newBadge}>
+          <Text style={styles.newText}>Yeni</Text>
+        </View>
+      )}
       {discount && (
         <View style={styles.discountBadge}>
           <Text style={styles.discountText}>%{discount}</Text>
@@ -57,13 +66,15 @@ export const ProductCard = ({
         {oldPrice && <Text style={styles.oldPrice}>{oldPrice} TL</Text>}
       </View>
       <View style={styles.ratingContainer}>
-        <Text style={styles.rating}>★ {rating}</Text>
+        <Icon name="star" size={16} color="#f39c12" />
+        <Text style={styles.rating}> {rating}</Text>
       </View>
       <TouchableOpacity
         style={styles.addToCartButton}
         onPress={handleAddToCart}
         disabled={loading}
       >
+        <Icon name="shopping-cart" size={18} color="#fff" />
         <Text style={styles.addToCartButtonText}>
           {loading ? 'Ekleniyor...' : 'Sepete Ekle'}
         </Text>
@@ -147,18 +158,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-
   addToCartButton: {
     backgroundColor: '#007AFF',
     borderRadius: 8,
     padding: 8,
-    alignItems: 'center',
+    flexDirection: 'row', // İkon ve metni yan yana göstermek için flexDirection eklendi
+    alignItems: 'center', // İkon ve metni dikey olarak ortala
+    justifyContent: 'center', // İkon ve metni yatay olarak ortala
     marginTop: 8,
   },
   addToCartButtonText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+    marginLeft: 4, // İkon ile metin arasına boşluk ekle
   },
-
 });

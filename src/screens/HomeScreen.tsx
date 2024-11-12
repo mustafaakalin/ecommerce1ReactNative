@@ -147,7 +147,7 @@ export const HomeScreen = () => { // navigat
                         {products.map((product) => (
                             <ProductCard
                                 key={product.id}
-                                id={product.id}  // ID'yi ekleyin
+                                id={product.id}  // Burada product.id'nin doğru değeri aldığından emin olun
                                 name={product.name}
                                 price={product.price}
                                 oldPrice={product.old_price}

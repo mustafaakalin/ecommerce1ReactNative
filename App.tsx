@@ -77,7 +77,7 @@ const TAB_OPTIONS = {
 
 // Components
 const CartIcon: React.FC<{ color: string; size: number }> = ({ color, size }) => {
-  const { items } = useCart();
+  const { items,itemCount } = useCart();
   const cartItemCount = items.length;
 
   return (
@@ -85,7 +85,7 @@ const CartIcon: React.FC<{ color: string; size: number }> = ({ color, size }) =>
       <Icon name="shopping-cart" size={size} color={color} />
       {cartItemCount > 0 && (
         <View style={styles.cartBadge}>
-          <Text style={styles.cartBadgeText}>{cartItemCount}</Text>
+          <Text style={styles.cartBadgeText}>{itemCount}</Text>
         </View>
       )}
     </View>
