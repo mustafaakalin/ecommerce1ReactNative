@@ -36,40 +36,40 @@ export const CartScreen = () => {
     console.log('Cart items:', items);
   }, [items]);
 
-    const onRefresh = async () => {
-        setRefreshing(true);
-        await fetchCart();
-        setRefreshing(false);
-    };
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchCart();
+    setRefreshing(false);
+  };
 
-    
+
 
   const handleUpdateQuantity = async (itemId: number, quantity: number) => {
     try {
-        await updateQuantity(itemId, quantity);
+      await updateQuantity(itemId, quantity);
     } catch (error: any) {
-        Alert.alert('Hata', error.message);
+      Alert.alert('Hata', error.message);
     }
   };
 
   const handleRemoveItem = async (itemId: number) => {
     Alert.alert(
-        'Ürünü Kaldır',
-        'Bu ürünü sepetten kaldırmak istediğinize emin misiniz?',
-        [
-            { text: 'İptal', style: 'cancel' },
-            {
-                text: 'Kaldır',
-                style: 'destructive',
-                onPress: async () => {
-                    try {
-                        await removeFromCart(itemId);
-                    } catch (error: any) {
-                        Alert.alert('Hata', error.message);
-                    }
-                },
-            },
-        ]
+      'Ürünü Kaldır',
+      'Bu ürünü sepetten kaldırmak istediğinize emin misiniz?',
+      [
+        { text: 'İptal', style: 'cancel' },
+        {
+          text: 'Kaldır',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await removeFromCart(itemId);
+            } catch (error: any) {
+              Alert.alert('Hata', error.message);
+            }
+          },
+        },
+      ]
     );
   };
 
@@ -83,10 +83,10 @@ export const CartScreen = () => {
 
   return (
     <View style={styles.container}>
-        
+
       <ScrollView style={styles.itemsContainer} refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-                }>
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      }>
         {items.length === 0 ? (
           <View style={styles.emptyCart}>
             <Text style={styles.emptyText}>Sepetiniz boş</Text>
@@ -304,5 +304,5 @@ const styles = StyleSheet.create({
 
   content: {
     flex: 1,
-},
+  },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,14 +8,15 @@ import {
   ActivityIndicator, 
   ScrollView,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCheckout } from '../context/CheckoutContext';
 
-const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = false }) => (
-  <View style={styles.inputContainer}>
-    <Icon name={icon} size={20} color="#666" style={styles.inputIcon} />
+const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = false, containerStyle = {} }) => (
+  <View style={[styles.inputContainer, containerStyle]}>
+    <Icon name={icon} size={24} color="#666" style={styles.inputIcon} />
     <TextInput
       style={styles.inputField}
       placeholder={placeholder}
@@ -28,7 +29,7 @@ const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = 
 );
 
 const CheckoutScreen: React.FC = () => {
-  const { checkout, loading, error } = useCheckout();
+  const { checkout, loading, error, addresses, user } = useCheckout();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -45,7 +46,33 @@ const CheckoutScreen: React.FC = () => {
     expireYear: '',
     cvc: '',
     paymentMethod: 'credit_card', // payment_method ekledik ve değerini credit_card olarak ayarladık
+    identityNumber: '', // identity_number ekledik
   });
+
+  useEffect(() => {
+    if (addresses && addresses.length > 0) {
+      const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
+      setFormData(prev => ({
+        ...prev,
+        firstName: defaultAddress.first_name,
+        lastName: defaultAddress.last_name,
+        address: defaultAddress.address,
+        city: defaultAddress.city,
+        state: defaultAddress.state,
+        zipCode: defaultAddress.zip_code,
+        country: defaultAddress.country,
+        phone: defaultAddress.phone,
+      }));
+    }
+
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        email: user.email,
+        identityNumber: user.identity_number || '',
+      }));
+    }
+  }, [addresses, user]);
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -68,141 +95,151 @@ const CheckoutScreen: React.FC = () => {
       expire_year: formData.expireYear,
       cvc: formData.cvc,
       payment_method: formData.paymentMethod, // payment_method ekledik
+      identity_number: formData.identityNumber, // identity_number ekledik
     };
 
     await checkout(data);
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={styles.header}>
-          <Icon name="shopping-cart" size={30} color="#333" />
-          <Text style={styles.title}>Checkout</Text>
-        </View>
+    <SafeAreaView style={styles.container}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <ScrollView showsVerticalScrollIndicator={false}>
+          <View style={styles.header}>
+            <Icon name="shopping-cart" size={30} color="#333" />
+            <Text style={styles.title}>Checkout</Text>
+          </View>
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          <InputField
-            icon="person"
-            placeholder="First Name"
-            value={formData.firstName}
-            onChangeText={(text) => updateField('firstName', text)}
-          />
-          <InputField
-            icon="person"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChangeText={(text) => updateField('lastName', text)}
-          />
-          <InputField
-            icon="email"
-            placeholder="Email"
-            value={formData.email}
-            onChangeText={(text) => updateField('email', text)}
-          />
-          <InputField
-            icon="phone"
-            placeholder="Phone"
-            value={formData.phone}
-            onChangeText={(number) => updateField('phone', number)}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shipping Address</Text>
-          <InputField
-            icon="home"
-            placeholder="Address"
-            value={formData.address}
-            onChangeText={(text) => updateField('address', text)}
-          />
-          <InputField
-            icon="location-city"
-            placeholder="City"
-            value={formData.city}
-            onChangeText={(text) => updateField('city', text)}
-          />
-          <InputField
-            icon="map"
-            placeholder="State"
-            value={formData.state}
-            onChangeText={(text) => updateField('state', text)}
-          />
-          <InputField
-            icon="location-on"
-            placeholder="Zip Code"
-            value={formData.zipCode}
-            onChangeText={(text) => updateField('zipCode', text)}
-          />
-          <InputField
-            icon="public"
-            placeholder="Country"
-            value={formData.country}
-            onChangeText={(text) => updateField('country', text)}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Payment Information</Text>
-          <InputField
-            icon="credit-card"
-            placeholder="Card Holder Name"
-            value={formData.cardName}
-            onChangeText={(text) => updateField('cardName', text)}
-          />
-          <InputField
-            icon="payment"
-            placeholder="Card Number"
-            value={formData.cardNumber}
-            onChangeText={(text) => updateField('cardNumber', text)}
-          />
-          <View style={styles.cardDetails}>
-            <View style={styles.expiryContainer}>
-              <InputField
-                icon="date-range"
-                placeholder="MM"
-                value={formData.expireMonth}
-                onChangeText={(text) => updateField('expireMonth', text)}
-              />
-              <InputField
-                icon="date-range"
-                placeholder="YYYY"
-                value={formData.expireYear}
-                onChangeText={(text) => updateField('expireYear', text)}
-              />
-            </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
             <InputField
-              icon="lock"
-              placeholder="CVC"
-              value={formData.cvc}
-              onChangeText={(text) => updateField('cvc', text)}
-              secureTextEntry
+              icon="person"
+              placeholder="First Name"
+              value={formData.firstName}
+              onChangeText={(text) => updateField('firstName', text)}
+            />
+            <InputField
+              icon="person"
+              placeholder="Last Name"
+              value={formData.lastName}
+              onChangeText={(text) => updateField('lastName', text)}
+            />
+            <InputField
+              icon="email"
+              placeholder="Email"
+              value={formData.email}
+              onChangeText={(text) => updateField('email', text)}
+            />
+            <InputField
+              icon="phone"
+              placeholder="Phone"
+              value={formData.phone}
+              onChangeText={(number) => updateField('phone', number)}
+            />
+            <InputField
+              icon="badge"
+              placeholder="Identity Number"
+              value={formData.identityNumber}
+              onChangeText={(text) => updateField('identityNumber', text)}
             />
           </View>
-        </View>
 
-        {error && <Text style={styles.error}>{error}</Text>}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Shipping Address</Text>
+            <InputField
+              icon="home"
+              placeholder="Address"
+              value={formData.address}
+              onChangeText={(text) => updateField('address', text)}
+            />
+            <InputField
+              icon="location-city"
+              placeholder="City"
+              value={formData.city}
+              onChangeText={(text) => updateField('city', text)}
+            />
+            <InputField
+              icon="map"
+              placeholder="State"
+              value={formData.state}
+              onChangeText={(text) => updateField('state', text)}
+            />
+            <InputField
+              icon="location-on"
+              placeholder="Zip Code"
+              value={formData.zipCode}
+              onChangeText={(text) => updateField('zipCode', text)}
+            />
+            <InputField
+              icon="public"
+              placeholder="Country"
+              value={formData.country}
+              onChangeText={(text) => updateField('country', text)}
+            />
+          </View>
 
-        <TouchableOpacity 
-          style={styles.checkoutButton} 
-          onPress={handleCheckout}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Icon name="check-circle" size={24} color="#fff" />
-              <Text style={styles.checkoutButtonText}>Complete Purchase</Text>
-            </>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Payment Information</Text>
+            <InputField
+              icon="credit-card"
+              placeholder="Card Holder Name"
+              value={formData.cardName}
+              onChangeText={(text) => updateField('cardName', text)}
+            />
+            <InputField
+              icon="payment"
+              placeholder="Card Number"
+              value={formData.cardNumber}
+              onChangeText={(text) => updateField('cardNumber', text)}
+            />
+            <View style={styles.cardDetails}>
+              <View style={styles.expiryContainer}>
+                <InputField
+                  icon="date-range"
+                  placeholder="MM"
+                  value={formData.expireMonth}
+                  onChangeText={(text) => updateField('expireMonth', text)}
+                />
+                <InputField
+                  icon="date-range"
+                  placeholder="YYYY"
+                  value={formData.expireYear}
+                  onChangeText={(text) => updateField('expireYear', text)}
+                />
+              </View>
+              <InputField
+                icon="lock"
+                placeholder="CVC"
+                value={formData.cvc}
+                onChangeText={(text) => updateField('cvc', text)}
+                secureTextEntry
+                containerStyle={styles.cvcInputContainer}
+              />
+            </View>
+          </View>
+
+          {error && <Text style={styles.error}>{error}</Text>}
+
+          <TouchableOpacity 
+            style={styles.checkoutButton} 
+            onPress={handleCheckout}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Icon name="check-circle" size={24} color="#fff" />
+                <Text style={styles.checkoutButtonText}>Complete Purchase</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -268,6 +305,9 @@ const styles = StyleSheet.create({
   expiryContainer: {
     flex: 1,
     marginRight: 10,
+  },
+  cvcInputContainer: {
+    width: 100,
   },
   checkoutButton: {
     backgroundColor: '#007AFF',
