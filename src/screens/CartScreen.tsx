@@ -1,4 +1,3 @@
-// src/screens/CartScreen.tsx
 import React, { useEffect } from 'react';
 import {
   View,
@@ -12,6 +11,7 @@ import {
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi
 
 export const CartScreen = () => {
   const navigation = useNavigation();
@@ -30,32 +30,36 @@ export const CartScreen = () => {
     fetchCart();
   }, [fetchCart]);
 
+  useEffect(() => {
+    console.log('Cart items:', items);
+  }, [items]);
+
   const handleUpdateQuantity = async (itemId: number, quantity: number) => {
     try {
-      await updateQuantity(itemId, quantity);
+        await updateQuantity(itemId, quantity);
     } catch (error: any) {
-      Alert.alert('Hata', error.message);
+        Alert.alert('Hata', error.message);
     }
   };
 
   const handleRemoveItem = async (itemId: number) => {
     Alert.alert(
-      'Ürünü Kaldır',
-      'Bu ürünü sepetten kaldırmak istediğinize emin misiniz?',
-      [
-        { text: 'İptal', style: 'cancel' },
-        {
-          text: 'Kaldır',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await removeFromCart(itemId);
-            } catch (error: any) {
-              Alert.alert('Hata', error.message);
-            }
-          },
-        },
-      ]
+        'Ürünü Kaldır',
+        'Bu ürünü sepetten kaldırmak istediğinize emin misiniz?',
+        [
+            { text: 'İptal', style: 'cancel' },
+            {
+                text: 'Kaldır',
+                style: 'destructive',
+                onPress: async () => {
+                    try {
+                        await removeFromCart(itemId);
+                    } catch (error: any) {
+                        Alert.alert('Hata', error.message);
+                    }
+                },
+            },
+        ]
     );
   };
 
@@ -77,6 +81,7 @@ export const CartScreen = () => {
               style={styles.shopButton}
               onPress={() => navigation.navigate('Home')}
             >
+              <Icon name="shopping-cart" size={24} color="#fff" /> {/* Alışverişe Başla butonuna ikon eklendi */}
               <Text style={styles.shopButtonText}>Alışverişe Başla</Text>
             </TouchableOpacity>
           </View>
@@ -85,7 +90,7 @@ export const CartScreen = () => {
             <View key={item.id} style={styles.cartItem}>
               <Image
                 source={{
-                  uri: item.product.images[0]?.image_path || 'default_image_url',
+                  uri: 'default_image_url',
                 }}
                 style={styles.productImage}
               />
@@ -111,7 +116,7 @@ export const CartScreen = () => {
                 onPress={() => handleRemoveItem(item.id)}
                 style={styles.removeButton}
               >
-                <Text style={styles.removeButtonText}>X</Text>
+                <Icon name="delete" size={24} color="#FF3B30" /> {/* Kaldır butonu için çöp kutusu ikonu eklendi */}
               </TouchableOpacity>
             </View>
           ))
@@ -136,6 +141,7 @@ export const CartScreen = () => {
             style={styles.checkoutButton}
             onPress={() => navigation.navigate('Checkout')}
           >
+            <Icon name="shopping-cart" size={24} color="#fff" /> {/* Siparişi Tamamla butonuna ikon eklendi */}
             <Text style={styles.checkoutButtonText}>Siparişi Tamamla</Text>
           </TouchableOpacity>
         </View>
@@ -172,11 +178,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
     padding: 12,
     borderRadius: 8,
+    flexDirection: 'row', // İkon ve metni yan yana göstermek için flexDirection eklendi
+    alignItems: 'center', // İkon ve metni dikey olarak ortala
   },
   shopButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8, // İkon ile metin arasına boşluk ekle
   },
   cartItem: {
     flexDirection: 'row',
@@ -227,6 +236,9 @@ const styles = StyleSheet.create({
   },
   removeButton: {
     padding: 8,
+    marginLeft: 8, // Butonun sol tarafına boşluk ekle
+    justifyContent: 'center', // İkonu dikey olarak ortala
+    alignItems: 'center', // İkonu yatay olarak ortala
   },
   removeButtonText: {
     fontSize: 16,
@@ -266,11 +278,14 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 8,
     marginTop: 16,
+    flexDirection: 'row', // İkon ve metni yan yana göstermek için flexDirection eklendi
+    alignItems: 'center', // İkon ve metni dikey olarak ortala
   },
   checkoutButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
+    marginLeft: 8, // İkon ile metin arasına boşluk ekle
   },
 });

@@ -1,4 +1,3 @@
-// src/context/CartContext.tsx
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import api from '../services/api';
@@ -46,12 +45,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const fetchCart = useCallback(async () => {
         try {
             setLoading(true);
-            const response = await api.get('/cart'); // v1 prefix'ini ekledik
-            setItems(response.data.items || []);
+            const response = await api.get('/cart');
+            console.log('Fetched cart response:', response.data);
+            setItems(response.data.data.items || []);
         } catch (error: any) {
             console.error('Error fetching cart:', error);
             if (!error.response?.status || error.response.status !== 404) {
-                // 404 hatası sepet boş olduğunda normal
                 Alert.alert('Hata', 'Sepet bilgileri alınamadı');
             }
         } finally {
@@ -68,15 +67,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(true);
             console.log(`Adding product ${productId} with quantity ${quantity} to cart`);
 
-            // Sepete ekle
-            const response = await api.post('/cart', {
-                product_id: productId,
-                quantity: quantity
-            });
+            // Sepette ürün var mı kontrol et
+            const existingItem = items.find(item => item.product.id === productId);
 
-            console.log('Add to cart response:', response.data);
+            if (existingItem) {
+                // Ürün zaten sepette, miktarı güncelle
+                const newQuantity = existingItem.quantity + quantity;
+                const response = await api.put(`/cart/${existingItem.id}`, {
+                    quantity: newQuantity,
+                });
+                console.log('Update cart response:', response.data);
+            } else {
+                // Ürün sepette yok, yeni ürün ekle
+                const response = await api.post('/cart', {
+                    product_id: productId,
+                    quantity: quantity
+                });
+                console.log('Add to cart response:', response.data);
+            }
+
             await fetchCart(); // Sepeti yenile
-            return response.data;
         } catch (error: any) {
             console.error('Error adding to cart:', error.response?.data || error);
             const errorMessage = error.response?.data?.message || 'Ürün sepete eklenirken bir hata oluştu';
@@ -85,16 +95,24 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    }, [fetchCart]);
+    }, [items, fetchCart]);
 
     const updateQuantity = useCallback(async (itemId: number, quantity: number) => {
         if (quantity < 1) {
             throw new Error('Miktar 1\'den küçük olamaz');
         }
-
+    
         try {
             setLoading(true);
-            const response = await api.put(`/cart/${itemId}`, {
+            // Sepette ürün var mı kontrol et
+            const existingItem = items.find(item => item.id === itemId);
+    
+            if (!existingItem) {
+                throw new Error('Ürün sepette bulunamadı');
+            }
+    
+            // existingItem.product.id ile işlem yapılabilir, ancak API isteğinde itemId kullanılmalı
+            const response = await api.put(`/cart/${existingItem.product.id}`, {
                 quantity: quantity
             });
             await fetchCart();
@@ -107,12 +125,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    }, [fetchCart]);
+    }, [items, fetchCart]);
+
 
     const removeFromCart = useCallback(async (itemId: number) => {
         try {
             setLoading(true);
-            await api.delete(`/cart/${itemId}`);
+
+            // Sepette ürün var mı kontrol et
+            const existingItem = items.find(item => item.id === itemId);
+            await api.delete(`/cart/${existingItem?.product.id}`);
             await fetchCart();
             Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
         } catch (error: any) {
