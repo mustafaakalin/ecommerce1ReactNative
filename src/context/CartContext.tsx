@@ -133,31 +133,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const removeFromCart = useCallback(async (itemId: number) => {
         try {
-            setLoading(true);
-
-            // Sepette ürün var mı kontrol et
-            try {
-                setLoading(true);
-                const existingItem = items.find(item => item.id === itemId);
-                if (existingItem) {
-                    await api.delete(`/cart/${existingItem.product.id}`);
-                }
-                Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
-
-            } catch (error) {
-                console.log('Error removing item from cart:', error);
-                
-            }
-            await fetchCart();
+          setLoading(true);
+    
+          // Sepette ürün var mı kontrol et
+          const existingItem = items.find(item => item.id === itemId);
+          if (existingItem) {
+            console.log('Removing item from cart:', existingItem.product.id);
+            await api.delete(`/cart/${existingItem.product.id}`);
+            Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
+          } else {
+            console.log('Item not found in cart:', itemId);
+          }
+    
+          await fetchCart(); // Sepeti güncelle
         } catch (error: any) {
-            console.error('Error removing item from cart:', error);
-            const errorMessage = error.response?.data?.message || 'Ürün sepetten kaldırılırken bir hata oluştu';
-            Alert.alert('Hata', errorMessage);
-            throw new Error(errorMessage);
+          console.error('Error removing item from cart:', error);
+          const errorMessage = error.response?.data?.message || 'Ürün sepetten kaldırılırken bir hata oluştu';
+          Alert.alert('Hata', errorMessage);
+          throw new Error(errorMessage);
         } finally {
-            setLoading(false);
+          setLoading(false);
         }
-    }, [fetchCart]);
+      }, [items, fetchCart]);
 
     const clearCart = useCallback(async () => {
         try {

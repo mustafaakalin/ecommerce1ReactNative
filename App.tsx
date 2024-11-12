@@ -15,10 +15,12 @@ import { CategoryDetailScreen } from './src/screens/CategoryDetailScreen';
 import { CartScreen } from './src/screens/CartScreen';
 import { CategoriesScreen } from './src/screens/CategoriesScreen';
 import { ProfileScreen } from './src/screens/ProfileScreen';
+import CheckoutScreen from './src/screens/CheckoutScreen';
 
 // Providers
 import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider, useCart } from './src/context/CartContext';
+import { CheckoutProvider } from './src/context/CheckoutContext'; // CheckoutProvider ekledik
 
 // Types
 export type RootStackParamList = {
@@ -27,6 +29,7 @@ export type RootStackParamList = {
   Home: undefined;
   ProductDetail: { slug: string };
   CategoryDetail: { slug: string };
+  Checkout: undefined; // Checkout ekledik
 };
 
 export type TabParamList = {
@@ -77,7 +80,7 @@ const TAB_OPTIONS = {
 
 // Components
 const CartIcon: React.FC<{ color: string; size: number }> = ({ color, size }) => {
-  const { items,itemCount } = useCart();
+  const { items, itemCount } = useCart();
   const cartItemCount = items.length;
 
   return (
@@ -149,42 +152,52 @@ const App: React.FC = () => (
   <NavigationContainer>
     <AuthProvider>
       <CartProvider>
-        <Stack.Navigator
-          initialRouteName="Login"
-          screenOptions={SCREEN_OPTIONS}
-        >
-          <Stack.Screen
-            name="Login"
-            component={LoginScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Register"
-            component={RegisterScreen}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="Home"
-            component={MainTabs}
-            options={{ headerShown: false }}
-          />
-          <Stack.Screen
-            name="ProductDetail"
-            component={ProductDetailScreen}
-            options={{
-              title: 'Ürün Detayı',
-              headerBackTitleVisible: false,
-            }}
-          />
-          <Stack.Screen
-            name="CategoryDetail"
-            component={CategoryDetailScreen}
-            options={{
-              title: 'Kategori Ürünleri',
-              headerBackTitleVisible: false,
-            }}
-          />
-        </Stack.Navigator>
+        <CheckoutProvider> {/* CheckoutProvider ekledik */}
+          <Stack.Navigator
+            initialRouteName="Login"
+            screenOptions={SCREEN_OPTIONS}
+          >
+            <Stack.Screen
+              name="Login"
+              component={LoginScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Register"
+              component={RegisterScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="Home"
+              component={MainTabs}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="ProductDetail"
+              component={ProductDetailScreen}
+              options={{
+                title: 'Ürün Detayı',
+                headerBackTitleVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="CategoryDetail"
+              component={CategoryDetailScreen}
+              options={{
+                title: 'Kategori Ürünleri',
+                headerBackTitleVisible: false,
+              }}
+            />
+            <Stack.Screen // Checkout ekledik
+              name="Checkout"
+              component={CheckoutScreen}
+              options={{
+                title: 'Ödeme',
+                headerBackTitleVisible: false,
+              }}
+            />
+          </Stack.Navigator>
+        </CheckoutProvider>
       </CartProvider>
     </AuthProvider>
   </NavigationContainer>

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from 'react-native';
 import { useCart } from '../context/CartContext';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +26,7 @@ export const CartScreen = () => {
     shippingCost,
     total,
   } = useCart();
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     fetchCart();
@@ -33,6 +35,14 @@ export const CartScreen = () => {
   useEffect(() => {
     console.log('Cart items:', items);
   }, [items]);
+
+    const onRefresh = async () => {
+        setRefreshing(true);
+        await fetchCart();
+        setRefreshing(false);
+    };
+
+    
 
   const handleUpdateQuantity = async (itemId: number, quantity: number) => {
     try {
@@ -73,7 +83,10 @@ export const CartScreen = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.itemsContainer}>
+        
+      <ScrollView style={styles.itemsContainer} refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                }>
         {items.length === 0 ? (
           <View style={styles.emptyCart}>
             <Text style={styles.emptyText}>Sepetiniz boş</Text>
@@ -288,4 +301,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginLeft: 8, // İkon ile metin arasına boşluk ekle
   },
+
+  content: {
+    flex: 1,
+},
 });
