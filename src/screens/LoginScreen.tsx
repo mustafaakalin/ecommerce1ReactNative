@@ -11,11 +11,17 @@ import {
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
+
+
+
 export const LoginScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const { login, loading } = useAuth();
 
+
+
+    
     const handleLogin = async () => {
         if (!email || !password) {
             Alert.alert('Hata', 'Lütfen tüm alanları doldurun');

@@ -161,20 +161,6 @@ export const HomeScreen = () => { // navigat
                     </View>
                 </View>
             </ScrollView>
-            <View style={styles.bottomNav}>
-                <TouchableOpacity style={styles.navItem}>
-                    <Text>Ana Sayfa</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <Text>Kategoriler</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <Text>Sepetim</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.navItem}>
-                    <Text>Profil</Text>
-                </TouchableOpacity>
-            </View>
         </SafeAreaView >
     );
 };
