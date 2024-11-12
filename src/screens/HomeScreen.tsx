@@ -147,6 +147,7 @@ export const HomeScreen = () => { // navigat
                         {products.map((product) => (
                             <ProductCard
                                 key={product.id}
+                                id={product.id}  // ID'yi ekleyin
                                 name={product.name}
                                 price={product.price}
                                 oldPrice={product.old_price}
