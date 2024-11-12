@@ -151,6 +151,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
           ))}
         </View>
       </View>
+      
     </ScrollView>
   );
 };

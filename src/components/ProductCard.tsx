@@ -1,7 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Image, Text, StyleSheet, View } from 'react-native';
+import { TouchableOpacity, Image, Text, StyleSheet, View, Alert } from 'react-native';
+import { useCart } from '../context/CartContext';
 
 interface ProductCardProps {
+  id: number;
   name: string;
   price: string;
   oldPrice?: string;
@@ -14,23 +16,34 @@ interface ProductCardProps {
 
 const BASE_URL = 'http://192.168.1.12:2121/storage/';
 
-export const ProductCard = ({ 
-  name, 
-  price, 
-  oldPrice, 
-  rating, 
-  isNew, 
-  discount, 
-  images = [], 
-  onPress 
+export const ProductCard = ({
+  id,
+  name,
+  price,
+  oldPrice,
+  rating,
+  isNew,
+  discount,
+  images = [],
+  onPress
 }: ProductCardProps) => {
+  const { addToCart, loading } = useCart();
   const imageUrl = images.length > 0 && images[0].image_path ? `${BASE_URL}${images[0].image_path}` : 'http://192.168.1.12:2121/default_product_image.jpg';
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCart(id, 1); // id prop olarak eklenmeli
+      Alert.alert('Başarılı', 'Ürün sepete eklendi.');
+    } catch (error) {
+      Alert.alert('Hata', 'Ürün sepete eklenirken bir hata oluştu.');
+    }
+  };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Image 
-        source={{ uri: imageUrl }} 
-        style={styles.image} 
+      <Image
+        source={{ uri: imageUrl }}
+        style={styles.image}
       />
       {isNew && <View style={styles.newBadge}><Text style={styles.newText}>Yeni</Text></View>}
       {discount && (
@@ -46,6 +59,15 @@ export const ProductCard = ({
       <View style={styles.ratingContainer}>
         <Text style={styles.rating}>★ {rating}</Text>
       </View>
+      <TouchableOpacity
+        style={styles.addToCartButton}
+        onPress={handleAddToCart}
+        disabled={loading}
+      >
+        <Text style={styles.addToCartButtonText}>
+          {loading ? 'Ekleniyor...' : 'Sepete Ekle'}
+        </Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 };
@@ -125,4 +147,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
+
+  addToCartButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    padding: 8,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  addToCartButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+
 });
