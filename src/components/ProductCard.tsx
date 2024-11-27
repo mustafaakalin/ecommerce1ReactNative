@@ -1,3 +1,4 @@
+// src/components/ProductCard.tsx
 import React from 'react';
 import { TouchableOpacity, Image, Text, StyleSheet, View, Alert } from 'react-native';
 import { useCart } from '../context/CartContext';
@@ -12,6 +13,7 @@ interface ProductCardProps {
   isNew: boolean;
   discount?: number;
   images: Array<{ image_path: string }>;
+  stock: number; // Stok bilgisi eklendi
   onPress: () => void;
 }
 
@@ -26,12 +28,12 @@ export const ProductCard = ({
   isNew,
   discount,
   images = [],
+  stock, // Stok bilgisi eklendi
   onPress
 }: ProductCardProps) => {
   
   const { addToCart, loading } = useCart();
   const imageUrl = images.length > 0 && images[0].image_path ? `${BASE_URL}${images[0].image_path}` : 'http://192.168.1.12:2121/default_product_image.jpg';
-
 
   const handleAddToCart = async () => {
     try {
@@ -70,13 +72,13 @@ export const ProductCard = ({
         <Text style={styles.rating}> {rating}</Text>
       </View>
       <TouchableOpacity
-        style={styles.addToCartButton}
+        style={[styles.addToCartButton, stock <= 0 && styles.addToCartButtonDisabled]}
         onPress={handleAddToCart}
-        disabled={loading}
+        disabled={loading || stock <= 0}
       >
         <Icon name="shopping-cart" size={18} color="#fff" />
         <Text style={styles.addToCartButtonText}>
-          {loading ? 'Ekleniyor...' : 'Sepete Ekle'}
+          {loading ? 'Ekleniyor...' : stock > 0 ? 'Sepete Ekle' : 'Stokta Yok'}
         </Text>
       </TouchableOpacity>
     </TouchableOpacity>
@@ -166,6 +168,9 @@ const styles = StyleSheet.create({
     alignItems: 'center', // İkon ve metni dikey olarak ortala
     justifyContent: 'center', // İkon ve metni yatay olarak ortala
     marginTop: 8,
+  },
+  addToCartButtonDisabled: {
+    backgroundColor: '#bdc3c7',
   },
   addToCartButtonText: {
     color: '#fff',

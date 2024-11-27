@@ -22,6 +22,7 @@ import { AuthProvider } from './src/context/AuthContext';
 import { CartProvider, useCart } from './src/context/CartContext';
 import { CheckoutProvider } from './src/context/CheckoutContext'; // CheckoutProvider ekledik
 import { ProfileProvider } from './src/context/ProfileContext';
+import { useAddress } from './src/context/AddressContext';
 
 // Types
 export type RootStackParamList = {

@@ -1,24 +1,7 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
+// src/context/AddressContext.tsx
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import axios from 'axios';
 import api from '../services/api';
-
-// API'den dönen verilerin türlerini tanımlayalım
-interface User {
-  id: number;
-  name: string;
-  surname: string | null;
-  email: string;
-  identity_number: string | null;
-  avatar: string | null;
-  instagram_account: string | null;
-  facebook_account: string | null;
-  tiktok_account: string | null;
-  x_account: string | null;
-  created_at: string;
-  updated_at: string;
-  addresses: Address[];
-  orders: Order[];
-}
 
 interface Address {
   id: number;
@@ -37,53 +20,41 @@ interface Address {
   updated_at: string;
 }
 
-interface Order {
-  id: number;
-  user_id: User;
-  total_price: number | null;
-  status: string;
-  created_at: string;
-  updated_at: string;
-}
-
-interface ProfileContextType {
-  user: User | null;
+interface AddressContextProps {
+  addresses: Address[];
   loading: boolean;
   error: string | null;
-  fetchProfile: () => void;
+  fetchAddresses: () => void;
   addAddress: (address: Address) => Promise<void>;
   updateAddress: (id: number, address: Address) => Promise<void>;
   deleteAddress: (id: number) => Promise<void>;
 }
 
-export const ProfileContext = createContext<ProfileContextType>({
-  user: null,
+const AddressContext = createContext<AddressContextProps>({
+  addresses: [],
   loading: false,
   error: null,
-  fetchProfile: () => {},
+  fetchAddresses: () => {},
   addAddress: async () => {},
   updateAddress: async () => {},
   deleteAddress: async () => {},
 });
 
-interface ProfileProviderProps {
-  children: ReactNode;
-}
-
-export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+export const AddressProvider: React.FC = ({ children }) => {
+  const [addresses, setAddresses] = useState<Address[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
+  const fetchAddresses = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await api.get('/user');
-      setUser(response.data.data);
+      const response = await api.get('/addresses');
+      console.log('Fetched addresses:', response.data.data);
+      setAddresses(response.data.data);
     } catch (err) {
-      setError('Profil bilgileri alınırken bir hata oluştu.');
+      setError('Adresler alınırken bir hata oluştu.');
     } finally {
       setLoading(false);
     }
@@ -95,8 +66,7 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
     try {
       const response = await api.post('/addresses', address);
-      const updatedUser = { ...user!, addresses: [...user!.addresses, response.data.data] };
-      setUser(updatedUser);
+      setAddresses([...addresses, response.data.data]);
     } catch (err) {
       setError('Adres eklenirken bir hata oluştu.');
     } finally {
@@ -110,11 +80,10 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
     try {
       const response = await api.put(`/addresses/${id}`, address);
-      const updatedAddresses = user!.addresses.map(addr => 
+      const updatedAddresses = addresses.map(addr => 
         addr.id === id ? response.data.data : addr
       );
-      const updatedUser = { ...user!, addresses: updatedAddresses };
-      setUser(updatedUser);
+      setAddresses(updatedAddresses);
     } catch (err) {
       setError('Adres güncellenirken bir hata oluştu.');
     } finally {
@@ -128,9 +97,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
 
     try {
       await api.delete(`/addresses/${id}`);
-      const updatedAddresses = user!.addresses.filter(addr => addr.id !== id);
-      const updatedUser = { ...user!, addresses: updatedAddresses };
-      setUser(updatedUser);
+      const updatedAddresses = addresses.filter(addr => addr.id !== id);
+      setAddresses(updatedAddresses);
     } catch (err) {
       setError('Adres silinirken bir hata oluştu.');
     } finally {
@@ -139,12 +107,14 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
   };
 
   useEffect(() => {
-    fetchProfile();
+    fetchAddresses();
   }, []);
 
   return (
-    <ProfileContext.Provider value={{ user, loading, error, fetchProfile, addAddress, updateAddress, deleteAddress }}>
+    <AddressContext.Provider value={{ addresses, loading, error, fetchAddresses, addAddress, updateAddress, deleteAddress }}>
       {children}
-    </ProfileContext.Provider>
+    </AddressContext.Provider>
   );
 };
+
+export const useAddress = () => useContext(AddressContext);

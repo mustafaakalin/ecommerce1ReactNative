@@ -1,3 +1,4 @@
+// src/context/CartContext.tsx
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import api from '../services/api';
@@ -68,23 +69,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             setLoading(true);
-            // console.log('Adding to cart:', { productId, quantity });
-
             const existingItem = items.find(item => item.product.id === productId);
-            // console.log('Existing item:', existingItem);
 
             if (existingItem) {
                 const newQuantity = existingItem.quantity + quantity;
+                if (newQuantity > existingItem.product.stock) {
+                    Alert.alert('Hata', 'Stokta yeterli ürün yok');
+                    return;
+                }
                 const response = await api.put(`/cart/${existingItem.product.id}`, {
                     quantity: newQuantity,
                 });
-                // console.log('Update cart response:', response.data);
             } else {
                 const response = await api.post('/cart', {
                     product_id: productId,
                     quantity: quantity
                 });
-                // console.log('Add to cart response:', response.data);
             }
 
             await fetchCart();
@@ -107,14 +107,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         try {
             setLoading(true);
-            // Sepette ürün var mı kontrol et
             const existingItem = items.find(item => item.id === itemId);
 
             if (!existingItem) {
                 throw new Error('Ürün sepette bulunamadı');
             }
 
-            // existingItem.product.id ile işlem yapılabilir, ancak API isteğinde itemId kullanılmalı
+            if (quantity > existingItem.product.stock) {
+                Alert.alert('Hata', 'Stokta yeterli ürün yok');
+                return;
+            }
+
             const response = await api.put(`/cart/${existingItem.product.id}`, {
                 quantity: quantity
             });
@@ -130,31 +133,28 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     }, [items, fetchCart]);
 
-
     const removeFromCart = useCallback(async (itemId: number) => {
         try {
-          setLoading(true);
-    
-          // Sepette ürün var mı kontrol et
-          const existingItem = items.find(item => item.id === itemId);
-          if (existingItem) {
-            console.log('Removing item from cart:', existingItem.product.id);
-            await api.delete(`/cart/${existingItem.product.id}`);
-            Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
-          } else {
-            console.log('Item not found in cart:', itemId);
-          }
-    
-          await fetchCart(); // Sepeti güncelle
+            setLoading(true);
+            const existingItem = items.find(item => item.id === itemId);
+
+            if (existingItem) {
+                await api.delete(`/cart/${existingItem.product.id}`);
+                Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
+            } else {
+                console.log('Item not found in cart:', itemId);
+            }
+
+            await fetchCart();
         } catch (error: any) {
-          console.error('Error removing item from cart:', error);
-          const errorMessage = error.response?.data?.message || 'Ürün sepetten kaldırılırken bir hata oluştu';
-          Alert.alert('Hata', errorMessage);
-          throw new Error(errorMessage);
+            console.error('Error removing item from cart:', error);
+            const errorMessage = error.response?.data?.message || 'Ürün sepetten kaldırılırken bir hata oluştu';
+            Alert.alert('Hata', errorMessage);
+            throw new Error(errorMessage);
         } finally {
-          setLoading(false);
+            setLoading(false);
         }
-      }, [items, fetchCart]);
+    }, [items, fetchCart]);
 
     const clearCart = useCallback(async () => {
         try {
@@ -176,8 +176,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     const total = subtotal + (items.length > 0 ? shippingCost : 0);
-    
-    
+
     return (
         <CartContext.Provider
             value={{

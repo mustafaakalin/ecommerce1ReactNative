@@ -1,3 +1,4 @@
+// src/screens/ProductDetailScreen.tsx
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -8,11 +9,15 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   Dimensions,
+  TextInput,
+  FlatList,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi
 import api from '../services/api';
 import { RootStackParamList } from '../types/navigation';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+import { useCart } from '../context/CartContext'; // CartContext import edildi
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'ProductDetail'>;
 type RoutePropType = RouteProp<RootStackParamList, 'ProductDetail'>;
@@ -40,18 +45,32 @@ interface ProductDetail {
   };
 }
 
+interface Comment {
+  id: number;
+  content: string;
+  rating: number;
+  user: {
+    name: string;
+  };
+}
+
 const BASE_URL = 'http://192.168.1.12:2121/storage/';
 
 export const ProductDetailScreen = ({ route, navigation }: Props) => {
   const { slug } = route.params;
   const [product, setProduct] = useState<ProductDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [rating, setRating] = useState(0);
+  const { addToCart } = useCart(); // CartContext'ten addToCart fonksiyonunu al
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         const response = await api.get(`/products/${slug}`);
         setProduct(response.data.data);
+        fetchComments(response.data.data.id);
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
@@ -61,6 +80,45 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
 
     fetchProduct();
   }, [slug]);
+
+  const fetchComments = async (productId: number) => {
+    try {
+      const response = await api.get(`/products/${productId}/comments`);
+      setComments(response.data.data);
+    } catch (error) {
+      console.error('Error fetching comments:', error);
+    }
+  };
+
+  const addComment = async () => {
+    try {
+      const response = await api.post(`/products/${product?.id}/comments`, {
+        content: newComment,
+        rating: rating,
+      });
+      setComments([response.data.data, ...comments]);
+      setNewComment('');
+      setRating(0);
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
+
+  const handleAddToCart = async () => {
+    if (product) {
+      try {
+        if (product.stock <= 0) {
+          alert('Stokta ürün yok!');
+          return;
+        }
+        await addToCart(product.id, 1);
+        alert('Ürün sepete eklendi!');
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        alert('Sepete eklenirken bir hata oluştu.');
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -134,6 +192,17 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
           </Text>
         </View>
 
+        {/* Sepete Ekle Butonu */}
+        <TouchableOpacity 
+          style={[styles.addToCartButton, product.stock <= 0 && styles.addToCartButtonDisabled]} 
+          onPress={handleAddToCart} 
+          disabled={product.stock <= 0}
+        >
+          <Text style={styles.addToCartButtonText}>
+            {product.stock > 0 ? 'Sepete Ekle' : 'Stokta Yok'}
+          </Text>
+        </TouchableOpacity>
+
         {/* Ürün Açıklaması */}
         <View style={styles.descriptionContainer}>
           <Text style={styles.sectionTitle}>Ürün Açıklaması</Text>
@@ -150,8 +219,51 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
             </View>
           ))}
         </View>
+
+        {/* Yorumlar */}
+        <View style={styles.commentsContainer}>
+          <Text style={styles.sectionTitle}>Yorumlar</Text>
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.commentItem}>
+                <Text style={styles.commentUser}>{item.user.name}</Text>
+                <Text style={styles.commentContent}>{item.content}</Text>
+                <View style={styles.commentRating}>
+                  {[...Array(item.rating)].map((_, index) => (
+                    <Icon key={index} name="star" size={16} color="#f39c12" />
+                  ))}
+                </View>
+              </View>
+            )}
+          />
+        </View>
+
+        {/* Yorum Ekle */}
+        <View style={styles.addCommentContainer}>
+          <TextInput
+            style={styles.commentInput}
+            placeholder="Yorumunuzu buraya yazın..."
+            value={newComment}
+            onChangeText={setNewComment}
+          />
+          <View style={styles.ratingInput}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <Icon
+                  name="star"
+                  size={24}
+                  color={star <= rating ? '#f39c12' : '#bdc3c7'}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+          <TouchableOpacity style={styles.submitButton} onPress={addComment}>
+            <Text style={styles.submitButtonText}>Yorum Ekle</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-      
     </ScrollView>
   );
 };
@@ -234,6 +346,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
+  addToCartButton: {
+    backgroundColor: '#2ecc71',
+    padding: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  addToCartButtonDisabled: {
+    backgroundColor: '#bdc3c7',
+  },
+  addToCartButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   descriptionContainer: {
     marginBottom: 24,
   },
@@ -265,6 +392,53 @@ const styles = StyleSheet.create({
     flex: 2,
     fontSize: 16,
     color: '#333',
+  },
+  commentsContainer: {
+    marginBottom: 24,
+  },
+  commentItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  commentUser: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  commentContent: {
+    fontSize: 14,
+    color: '#333',
+    marginBottom: 4,
+  },
+  commentRating: {
+    flexDirection: 'row',
+  },
+  addCommentContainer: {
+    marginBottom: 24,
+  },
+  commentInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 4,
+    padding: 8,
+    marginBottom: 8,
+  },
+  ratingInput: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

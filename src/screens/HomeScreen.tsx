@@ -44,6 +44,7 @@ interface Product {
     discount: number;
     images: Array<{ image_path: string }>;
     slug: string;
+    stock: number; // Stok bilgisi eklendi
 }
 
 export const HomeScreen = () => { // navigat
@@ -155,6 +156,7 @@ export const HomeScreen = () => { // navigat
                                 isNew={product.is_new}
                                 discount={product.discount}
                                 images={product.images || []}  // Undefined kontrolü eklendi
+                                stock={product.stock}  // Stok bilgisi eklendi
                                 onPress={() => handleProductPress(product.slug)}
                             />
                         ))}
