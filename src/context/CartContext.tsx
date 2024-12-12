@@ -49,26 +49,67 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]); // Added user as a dependency
 
     const fetchCart = useCallback(async () => {
+        console.log('Fetching cart for user:', user?.id);
+        if (!user) {
+            console.warn('Attempting to fetch cart without user authentication');
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await api.get('/cart');
-            console.log('Fetched cart response:', response.data);
+            console.log('Cart fetch response:', {
+                status: response.status,
+                itemCount: response.data.data.total_items,
+                items: response.data.data.items
+            });
             setItems(response.data.data.items || []);
             setItemCount(response.data.data.total_items || 0);
         } catch (error: any) {
-            console.error('Error fetching cart:', error);
-            if (!error.response?.status || error.response.status !== 404) {
+            console.log('Cart fetch result:', {
+                status: error.response?.status,
+                message: error.response?.data?.message,
+            });
+            
+            // 404 durumunda sepet boş demektir, hata göstermeye gerek yok
+            if (error.response?.status === 404) {
+                setItems([]);
+                setItemCount(0);
+                return;
+            }
+
+            // Diğer hata durumları için hata göster
+            if (error.response?.status !== 404) {
+                console.error('Cart fetch error:', {
+                    error: error.message,
+                    response: error.response?.data
+                });
                 Alert.alert('Hata', 'Sepet bilgileri alınamadı');
             }
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user]);
 
     const addToCart = useCallback(async (productId: number, quantity: number) => {
-        if (!productId) {
+        console.log('Adding to cart:', { productId, quantity, userId: user?.id });
+        
+        if (!user) {
+            console.error('User not authenticated');
+            Alert.alert('Hata', 'Lütfen önce giriş yapınız');
+            return;
+        }
+
+        if (!productId || productId <= 0) {
             console.error('Invalid product ID:', productId);
-            throw new Error('Ürün ID\'si gereklidir');
+            Alert.alert('Hata', 'Geçersiz ürün ID');
+            return;
+        }
+
+        if (!quantity || quantity <= 0) {
+            console.error('Invalid quantity:', quantity);
+            Alert.alert('Hata', 'Geçersiz miktar');
+            return;
         }
 
         try {
@@ -76,37 +117,63 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const existingItem = items.find(item => item.product.id === productId);
 
             if (existingItem) {
+                console.log('Updating existing cart item:', existingItem);
                 const newQuantity = existingItem.quantity + quantity;
+                
                 if (newQuantity > existingItem.product.stock) {
-                    Alert.alert('Hata', 'Stokta yeterli ürün yok');
+                    console.warn('Insufficient stock:', {
+                        requested: newQuantity,
+                        available: existingItem.product.stock
+                    });
+                    Alert.alert('Hata', `Stokta sadece ${existingItem.product.stock} adet ürün var`);
                     return;
                 }
+
                 const response = await api.put(`/cart/${existingItem.product.id}`, {
                     quantity: newQuantity,
                 });
+                console.log('Update response:', response.data);
             } else {
+                console.log('Adding new item to cart');
                 const response = await api.post('/cart', {
                     product_id: productId,
                     quantity: quantity
                 });
+                console.log('Add response:', response.data);
             }
 
             await fetchCart();
         } catch (error: any) {
-            console.error('Error adding to cart:', {
-                error: error.response?.data || error,
-                productId,
-                quantity
+            console.error('Add to cart error:', {
+                status: error.response?.status,
+                message: error.response?.data?.message,
+                error: error.message
             });
-            throw error;
+            Alert.alert('Hata', error.response?.data?.message || 'Ürün sepete eklenirken bir hata oluştu');
         } finally {
             setLoading(false);
         }
-    }, [items, fetchCart]);
+    }, [items, fetchCart, user]);
 
     const updateQuantity = useCallback(async (itemId: number, quantity: number) => {
-        if (quantity < 1) {
-            throw new Error('Miktar 1\'den küçük olamaz');
+        console.log('Updating quantity:', { itemId, quantity, userId: user?.id });
+
+        if (!user) {
+            console.error('User not authenticated');
+            Alert.alert('Hata', 'Lütfen önce giriş yapınız');
+            return;
+        }
+
+        if (!itemId || itemId <= 0) {
+            console.error('Invalid item ID:', itemId);
+            Alert.alert('Hata', 'Geçersiz ürün ID');
+            return;
+        }
+
+        if (!quantity || quantity < 1) {
+            console.error('Invalid quantity:', quantity);
+            Alert.alert('Hata', 'Miktar 1\'den küçük olamaz');
+            return;
         }
 
         try {
@@ -114,41 +181,66 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const existingItem = items.find(item => item.id === itemId);
 
             if (!existingItem) {
+                console.error('Item not found in cart:', itemId);
                 throw new Error('Ürün sepette bulunamadı');
             }
 
             if (quantity > existingItem.product.stock) {
-                Alert.alert('Hata', 'Stokta yeterli ürün yok');
+                console.warn('Insufficient stock:', {
+                    requested: quantity,
+                    available: existingItem.product.stock
+                });
+                Alert.alert('Hata', `Stokta sadece ${existingItem.product.stock} adet ürün var`);
                 return;
             }
 
             const response = await api.put(`/cart/${existingItem.product.id}`, {
                 quantity: quantity
             });
+            console.log('Update quantity response:', response.data);
             await fetchCart();
             return response.data;
         } catch (error: any) {
-            console.error('Error updating cart:', error);
+            console.error('Update quantity error:', {
+                status: error.response?.status,
+                message: error.response?.data?.message,
+                error: error.message
+            });
             const errorMessage = error.response?.data?.message || 'Sepet güncellenirken bir hata oluştu';
             Alert.alert('Hata', errorMessage);
             throw new Error(errorMessage);
         } finally {
             setLoading(false);
         }
-    }, [items, fetchCart]);
+    }, [items, fetchCart, user]);
 
     const removeFromCart = useCallback(async (itemId: number) => {
+        console.log('Removing from cart:', { itemId, userId: user?.id });
+
+        if (!user) {
+            console.error('User not authenticated');
+            Alert.alert('Hata', 'Lütfen önce giriş yapınız');
+            return;
+        }
+
+        if (!itemId || itemId <= 0) {
+            console.error('Invalid item ID:', itemId);
+            Alert.alert('Hata', 'Geçersiz ürün ID');
+            return;
+        }
+
         try {
             setLoading(true);
             const existingItem = items.find(item => item.id === itemId);
 
-            if (existingItem) {
-                await api.delete(`/cart/${existingItem.product.id}`);
-                Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
-            } else {
-                console.log('Item not found in cart:', itemId);
+            if (!existingItem) {
+                console.warn('Item not found in cart:', itemId);
+                return;
             }
 
+            const response = await api.delete(`/cart/${existingItem.product.id}`);
+            console.log('Remove item response:', response.data);
+            Alert.alert('Başarılı', 'Ürün sepetten kaldırıldı');
             await fetchCart();
         } catch (error: any) {
             console.error('Error removing item from cart:', error);
@@ -158,7 +250,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
             setLoading(false);
         }
-    }, [items, fetchCart]);
+    }, [items, fetchCart, user]);
 
     const clearCart = useCallback(async () => {
         try {
