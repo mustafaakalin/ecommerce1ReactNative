@@ -2,6 +2,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Alert } from 'react-native';
 import api from '../services/api';
+import { useAuth } from './AuthContext';
 
 interface CartItem {
     id: number;
@@ -34,15 +35,18 @@ interface CartContextData {
 const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { user } = useAuth(); // Accessing user from AuthContext
     const [items, setItems] = useState<CartItem[]>([]);
     const [itemCount, setItemCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const shippingCost = 15; // Sabit kargo ücreti
 
-    // İlk yüklemede sepeti getir
+    /// İlk yüklemede sepeti getir
     useEffect(() => {
-        fetchCart();
-    }, []);
+        if (user) { // Conditional fetch
+            fetchCart();
+        }
+    }, [user]); // Added user as a dependency
 
     const fetchCart = useCallback(async () => {
         try {
