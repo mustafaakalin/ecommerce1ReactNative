@@ -24,6 +24,13 @@ import { CheckoutProvider } from './src/context/CheckoutContext'; // CheckoutPro
 import { ProfileProvider } from './src/context/ProfileContext';
 import { useAddress } from './src/context/AddressContext';
 
+
+
+// nativewind tailwindcss
+import  "./src/assets/css/global.css"
+
+
+
 // Types
 export type RootStackParamList = {
   Login: undefined;

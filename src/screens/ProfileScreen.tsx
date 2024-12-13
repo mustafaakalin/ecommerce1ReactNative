@@ -1,5 +1,5 @@
 // src/screens/ProfileScreen.tsx
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -14,8 +14,11 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { ProfileContext } from '../context/ProfileContext';
+import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
 
 export const ProfileScreen: React.FC = () => {
+  const { isAuthenticated, user: authUser } = useAuth();
   const { user, loading, error, fetchProfile, addAddress, updateAddress, deleteAddress } = useContext(ProfileContext);
   const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -33,6 +36,14 @@ export const ProfileScreen: React.FC = () => {
     zip_code: '',
     is_default: false,
   });
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isAuthenticated) {
+        fetchProfile();
+      }
+    }, [isAuthenticated])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -103,6 +114,14 @@ export const ProfileScreen: React.FC = () => {
     setModalVisible(true);
   };
 
+  if (!isAuthenticated) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Lütfen giriş yapın</Text>
+      </View>
+    );
+  }
+
   if (loading && !refreshing) {
     return (
       <View style={styles.container}>
@@ -114,8 +133,10 @@ export const ProfileScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.container}>
-        <Icon name="error-outline" size={50} color="#FF3B30" />
         <Text style={styles.errorText}>{error}</Text>
+        <TouchableOpacity onPress={fetchProfile} style={styles.retryButton}>
+          <Text style={styles.retryText}>Tekrar Dene</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -622,5 +643,16 @@ const styles = StyleSheet.create({
   orderItemText: {
     fontSize: 16,
     color: '#666666',
+  },
+  retryButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+  },
+  retryText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

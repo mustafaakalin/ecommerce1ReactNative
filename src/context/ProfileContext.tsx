@@ -1,5 +1,5 @@
-import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import axios from 'axios';
+import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import api from '../services/api';
 
 // API'den dönen verilerin türlerini tanımlayalım
@@ -56,26 +56,24 @@ interface ProfileContextType {
   deleteAddress: (id: number) => Promise<void>;
 }
 
-export const ProfileContext = createContext<ProfileContextType>({
-  user: null,
-  loading: false,
-  error: null,
-  fetchProfile: () => {},
-  addAddress: async () => {},
-  updateAddress: async () => {},
-  deleteAddress: async () => {},
-});
+export const ProfileContext = createContext<ProfileContextType>({} as ProfileContextType);
 
 interface ProfileProviderProps {
   children: ReactNode;
 }
 
 export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) => {
+  const { isAuthenticated, isInitialized } = useAuth();
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -83,11 +81,19 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       const response = await api.get('/user');
       setUser(response.data.data);
     } catch (err) {
-      setError('Profil bilgileri alınırken bir hata oluştu.');
+      const errorMessage = err.response?.data?.message || 'Profil bilgileri alınırken bir hata oluştu.';
+      setError(errorMessage);
+      setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (isInitialized && isAuthenticated) {
+      fetchProfile();
+    }
+  }, [isInitialized, isAuthenticated, fetchProfile]);
 
   const addAddress = async (address: Address) => {
     setLoading(true);
@@ -98,7 +104,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       const updatedUser = { ...user!, addresses: [...user!.addresses, response.data.data] };
       setUser(updatedUser);
     } catch (err) {
-      setError('Adres eklenirken bir hata oluştu.');
+      const errorMessage = err.response?.data?.message || 'Adres eklenirken bir hata oluştu.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -116,7 +123,8 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       const updatedUser = { ...user!, addresses: updatedAddresses };
       setUser(updatedUser);
     } catch (err) {
-      setError('Adres güncellenirken bir hata oluştu.');
+      const errorMessage = err.response?.data?.message || 'Adres güncellenirken bir hata oluştu.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -132,18 +140,23 @@ export const ProfileProvider: React.FC<ProfileProviderProps> = ({ children }) =>
       const updatedUser = { ...user!, addresses: updatedAddresses };
       setUser(updatedUser);
     } catch (err) {
-      setError('Adres silinirken bir hata oluştu.');
+      const errorMessage = err.response?.data?.message || 'Adres silinirken bir hata oluştu.';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   return (
-    <ProfileContext.Provider value={{ user, loading, error, fetchProfile, addAddress, updateAddress, deleteAddress }}>
+    <ProfileContext.Provider value={{
+      user,
+      loading,
+      error,
+      fetchProfile,
+      addAddress,
+      updateAddress,
+      deleteAddress
+    }}>
       {children}
     </ProfileContext.Provider>
   );

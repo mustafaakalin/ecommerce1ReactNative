@@ -1,16 +1,17 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User } from '../types/auth';
 import api, { setAuthToken } from '../services/api';
-import { RootStackParamList } from '../types/navigation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface AuthContextData {
   user: User | null;
   loading: boolean;
+  isInitialized: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
   logout: () => Promise<void>;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -18,6 +19,27 @@ const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  useEffect(() => {
+    initializeAuth();
+  }, []);
+
+  const initializeAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('@auth_token');
+      const storedUser = await AsyncStorage.getItem('@user');
+
+      if (token && storedUser) {
+        setAuthToken(token);
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+    } finally {
+      setIsInitialized(true);
+    }
+  };
 
   const login = async (email: string, password: string) => {
     try {
@@ -73,8 +95,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const isAuthenticated = !!user;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      isInitialized,
+      login, 
+      register, 
+      logout,
+      isAuthenticated 
+    }}>
       {children}
     </AuthContext.Provider>
   );
