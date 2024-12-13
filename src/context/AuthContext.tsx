@@ -20,7 +20,6 @@ interface AuthContextData {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   signInWithGoogle: () => Promise<void>;
-  onGoogleButtonPress: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -41,33 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []);
 
-
-
-  async function onGoogleButtonPress() {
-    // Check if your device supports Google Play
-    await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
-    // Get the users ID token
-    const signInResult = await GoogleSignin.signIn();
-
-
-    console.log('Google Sign-In result:', signInResult);
-
-    // Try the new style of google-sign in result, from v13+ of that module
-    const idToken = signInResult.data?.idToken;
-    if (!idToken) {
-      // if you are using older versions of google-signin, try old style result
-      const idToken = signInResult.idToken;
-    }
-    if (!idToken) {
-      throw new Error('No ID token found');
-    }
-
-    // Create a Google credential with the token
-    const googleCredential = auth.GoogleAuthProvider.credential(signInResult.data.token);
-
-    // Sign-in the user with the credential
-    return auth().signInWithCredential(googleCredential);
-  }
 
 
 
@@ -232,8 +204,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register, 
       logout,
       isAuthenticated,
-      signInWithGoogle,
-      onGoogleButtonPress
+      signInWithGoogle
     }}>
       {children}
     </AuthContext.Provider>

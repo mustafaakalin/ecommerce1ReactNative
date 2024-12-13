@@ -15,7 +15,7 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 export const LoginScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const { login, loading, signInWithGoogle, onGoogleButtonPress } = useAuth();
+    const { login, loading, signInWithGoogle } = useAuth();
 
     const handleLogin = async () => {
         if (!email || !password) {
@@ -42,17 +42,6 @@ export const LoginScreen = ({ navigation }: any) => {
                 'Hata',
                 error.message || 'Google ile giriş yapılırken bir hata oluştu'
             );
-        }
-    };
-    const handleGoogleSignIn2 = async () => {
-        try {
-            await onGoogleButtonPress().then(() => console.log('Signed in with Google!'));
-        } catch (error: any) {
-            Alert.alert(
-                'Hata',
-                'Google ile giriş yapılırken bir hata oluştu' + error
-            );
-            console.log(error);
         }
     };
 
