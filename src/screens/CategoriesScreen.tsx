@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 export const CategoriesScreen: React.FC = () => {
   return (
     <View style={styles.container}>
-      <Text>Kategoriler</Text>
+      <Text className='text-red-500'>Kategoriler</Text>
     </View>
   );
 };

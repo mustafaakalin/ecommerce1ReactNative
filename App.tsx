@@ -1,10 +1,11 @@
 // App.tsx
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { navigationRef } from './src/services/navigationService';
 
 // Screens
 import { LoginScreen } from './src/screens/LoginScreen';
@@ -18,18 +19,14 @@ import { ProfileScreen } from './src/screens/ProfileScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 
 // Providers
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { CartProvider, useCart } from './src/context/CartContext';
 import { CheckoutProvider } from './src/context/CheckoutContext'; // CheckoutProvider ekledik
 import { ProfileProvider } from './src/context/ProfileContext';
 import { useAddress } from './src/context/AddressContext';
 
-
-
 // nativewind tailwindcss
-import  "./src/assets/css/global.css"
-
-
+import "./src/assets/css/global.css"
 
 // Types
 export type RootStackParamList = {
@@ -157,56 +154,78 @@ const MainTabs: React.FC = () => (
   </Tab.Navigator>
 );
 
+const Navigation: React.FC = () => {
+  const { isAuthenticated, isInitialized } = useAuth();
+
+  if (!isInitialized) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  return (
+    <Stack.Navigator screenOptions={SCREEN_OPTIONS}>
+      {!isAuthenticated ? (
+        // Auth screens
+        <>
+          <Stack.Screen
+            name="Login"
+            component={LoginScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Register"
+            component={RegisterScreen}
+            options={{ headerShown: false }}
+          />
+        </>
+      ) : (
+        // Protected screens
+        <>
+          <Stack.Screen
+            name="Home"
+            component={MainTabs}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="ProductDetail"
+            component={ProductDetailScreen}
+            options={{
+              title: 'Ürün Detayı',
+              headerBackTitleVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="CategoryDetail"
+            component={CategoryDetailScreen}
+            options={{
+              title: 'Kategori Ürünleri',
+              headerBackTitleVisible: false,
+            }}
+          />
+          <Stack.Screen
+            name="Checkout"
+            component={CheckoutScreen}
+            options={{
+              title: 'Ödeme',
+              headerBackTitleVisible: false,
+            }}
+          />
+        </>
+      )}
+    </Stack.Navigator>
+  );
+};
+
 const App: React.FC = () => (
-  <NavigationContainer>
+  <NavigationContainer ref={navigationRef}>
     <AuthProvider>
       <CartProvider>
         <CheckoutProvider> {/* CheckoutProvider ekledik */}
           <ProfileProvider>
-            <Stack.Navigator
-              initialRouteName="Login"
-              screenOptions={SCREEN_OPTIONS}
-            >
-              <Stack.Screen
-                name="Login"
-                component={LoginScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="Register"
-                component={RegisterScreen}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="Home"
-                component={MainTabs}
-                options={{ headerShown: false }}
-              />
-              <Stack.Screen
-                name="ProductDetail"
-                component={ProductDetailScreen}
-                options={{
-                  title: 'Ürün Detayı',
-                  headerBackTitleVisible: false,
-                }}
-              />
-              <Stack.Screen
-                name="CategoryDetail"
-                component={CategoryDetailScreen}
-                options={{
-                  title: 'Kategori Ürünleri',
-                  headerBackTitleVisible: false,
-                }}
-              />
-              <Stack.Screen // Checkout ekledik
-                name="Checkout"
-                component={CheckoutScreen}
-                options={{
-                  title: 'Ödeme',
-                  headerBackTitleVisible: false,
-                }}
-              />
-            </Stack.Navigator>
+            <Navigation />
           </ProfileProvider>
         </CheckoutProvider>
       </CartProvider>

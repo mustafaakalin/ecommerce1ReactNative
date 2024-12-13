@@ -31,12 +31,7 @@ export const RegisterScreen = ({ navigation }: any) => {
 
         try {
             await register(name, email, password, passwordConfirmation);
-            Alert.alert('Başarılı', 'Hesabınız başarıyla oluşturuldu', [
-                {
-                    text: 'Tamam',
-                    onPress: () => navigation.replace('Home')
-                }
-            ]);
+            // Remove navigation.replace since App.tsx will handle navigation automatically
         } catch (error: any) {
             Alert.alert(
                 'Hata',

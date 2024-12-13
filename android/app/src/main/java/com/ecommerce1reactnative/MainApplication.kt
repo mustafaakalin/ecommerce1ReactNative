@@ -1,4 +1,4 @@
-package com.ecommerce1reactnative
+package tech.akalin.ecommerce1
 
 import android.app.Application
 import com.facebook.react.PackageList

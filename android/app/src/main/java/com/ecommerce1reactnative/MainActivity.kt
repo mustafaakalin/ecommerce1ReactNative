@@ -1,4 +1,4 @@
-package com.ecommerce1reactnative
+package tech.akalin.ecommerce1
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate

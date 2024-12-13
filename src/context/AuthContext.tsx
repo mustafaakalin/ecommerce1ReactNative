@@ -3,6 +3,13 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { User } from '../types/auth';
 import api, { setAuthToken } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { reset } from '../services/navigationService';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+// Google Sign-In yapılandırması
+GoogleSignin.configure({
+  webClientId: '310686453894-ovnuq4hk40gc7bkuhgjdfja993c3ts3q.apps.googleusercontent.com', // google-services.json'dan
+});
 
 interface AuthContextData {
   user: User | null;
@@ -12,6 +19,7 @@ interface AuthContextData {
   register: (name: string, email: string, password: string, password_confirmation: string) => Promise<void>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
+  signInWithGoogle: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -80,18 +88,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      await api.post('/logout'); // Backend'e logout isteği
-      // Local storage'dan token ve kullanıcı bilgilerini temizle
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+      await api.post('/logout');
+      await AsyncStorage.removeItem('@auth_token');
+      await AsyncStorage.removeItem('@user');
+      setAuthToken(null);
       setUser(null);
+      reset('Login');
     } catch (error) {
       console.error('Logout error:', error);
-      // Hata olsa bile local storage'ı temizle ve kullanıcıyı çıkış yaptır
-      await AsyncStorage.removeItem('token');
-      await AsyncStorage.removeItem('user');
+      await AsyncStorage.removeItem('@auth_token');
+      await AsyncStorage.removeItem('@user');
+      setAuthToken(null);
       setUser(null);
-      throw error; // Hata yönetimi için hatayı yeniden fırlat
+      reset('Login');
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      setLoading(true);
+      // Google sign-in akışını başlat
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      
+      // Backend'e Google kimlik bilgilerini gönder
+      const response = await api.post('/auth/google', {
+        id_token: userInfo.idToken,
+      });
+
+      // Kullanıcı bilgilerini ve token'ı kaydet
+      setUser(response.data.user);
+      setAuthToken(response.data.token);
+      await AsyncStorage.setItem('@auth_token', response.data.token);
+      await AsyncStorage.setItem('@user', JSON.stringify(response.data.user));
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -105,7 +139,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login, 
       register, 
       logout,
-      isAuthenticated 
+      isAuthenticated,
+      signInWithGoogle
     }}>
       {children}
     </AuthContext.Provider>
