@@ -8,8 +8,18 @@ const api = axios.create({
   },
 });
 
+
+const apioauth = axios.create({
+  baseURL: 'http://192.168.1.11:2121/admin/oauth',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 export const setAuthToken = (token: string) => {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 };
 
+
+export {apioauth};
 export default api;
