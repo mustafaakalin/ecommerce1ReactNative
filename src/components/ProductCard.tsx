@@ -3,6 +3,7 @@ import React from 'react';
 import { TouchableOpacity, Image, Text, StyleSheet, View, Alert } from 'react-native';
 import { useCart } from '../context/CartContext';
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi
+import { MotiView } from 'moti';
 
 interface ProductCardProps {
   id: number;
@@ -20,162 +21,104 @@ interface ProductCardProps {
 const BASE_URL = 'http://192.168.1.12:2121/storage/';
 
 export const ProductCard = ({
-  id,
-  name,
-  price,
-  oldPrice,
-  rating,
-  isNew,
-  discount,
-  images = [],
-  stock, // Stok bilgisi eklendi
-  onPress
+  id, name, price, oldPrice, rating, isNew,
+  discount, images = [], stock, onPress
 }: ProductCardProps) => {
-  
-  const { addToCart, loading } = useCart();
-  const imageUrl = images.length > 0 && images[0].image_path ? `${BASE_URL}${images[0].image_path}` : 'http://192.168.1.12:2121/default_product_image.jpg';
+  const { addToCart, loadingItems } = useCart(); // Update this line
+  const imageUrl = images.length > 0 && images[0].image_path
+    ? `${BASE_URL}${images[0].image_path}`
+    : 'http://192.168.1.12:2121/default_product_image.jpg';
 
   const handleAddToCart = async () => {
     try {
-      console.log('Adding product with ID:', id); // ID'yi kontrol et
       await addToCart(id, 1);
       Alert.alert('Başarılı', 'Ürün sepete eklendi.');
     } catch (error) {
-      console.error('Error in handleAddToCart:', error); // Hata detayını gör
       Alert.alert('Hata', 'Ürün sepete eklenirken bir hata oluştu.');
     }
   };
 
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress}>
-      <Image
-        source={{ uri: imageUrl }}
-        style={styles.image}
-      />
-      {isNew && (
-        <View style={styles.newBadge}>
-          <Text style={styles.newText}>Yeni</Text>
-        </View>
-      )}
-      {discount && (
-        <View style={styles.discountBadge}>
-          <Text style={styles.discountText}>%{discount}</Text>
-        </View>
-      )}
-      <Text style={styles.name} numberOfLines={2}>{name}</Text>
-      <View style={styles.priceContainer}>
-        <Text style={styles.price}>{price} TL</Text>
-        {oldPrice && <Text style={styles.oldPrice}>{oldPrice} TL</Text>}
-      </View>
-      <View style={styles.ratingContainer}>
-        <Icon name="star" size={16} color="#f39c12" />
-        <Text style={styles.rating}> {rating}</Text>
-      </View>
+    <MotiView
+      from={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: 'timing', duration: 300 }}
+      className="w-[48%] mb-4"
+    >
       <TouchableOpacity
-        style={[styles.addToCartButton, stock <= 0 && styles.addToCartButtonDisabled]}
-        onPress={handleAddToCart}
-        disabled={loading || stock <= 0}
+        onPress={onPress}
+        className="bg-white rounded-2xl overflow-hidden shadow-lg"
       >
-        <Icon name="shopping-cart" size={18} color="#fff" />
-        <Text style={styles.addToCartButtonText}>
-          {loading ? 'Ekleniyor...' : stock > 0 ? 'Sepete Ekle' : 'Stokta Yok'}
-        </Text>
+        <View className="relative">
+          <Image
+            source={{ uri: imageUrl }}
+            className="w-full h-[180px] rounded-t-2xl"
+            resizeMode="cover"
+          />
+
+          {/* Badges Container */}
+          <View className="absolute top-2 left-2 flex flex-row gap-2">
+            {isNew && (
+              <View className="bg-emerald-500 px-2 py-1 rounded-full">
+                <Text className="text-white text-xs font-bold">Yeni</Text>
+              </View>
+            )}
+            {discount && (
+              <View className="bg-red-500 px-2 py-1 rounded-full">
+                <Text className="text-white text-xs font-bold">%{discount}</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        <View className="p-3">
+          {/* Product Info */}
+          <Text
+            numberOfLines={2}
+            className="text-gray-800 font-medium text-sm mb-1 h-[40px]"
+          >
+            {name}
+          </Text>
+
+          {/* Price Section */}
+          <View className="flex-row items-center mb-2">
+            <Text className="text-primary-600 font-bold text-base">
+              {price} ₺
+            </Text>
+            {oldPrice && (
+              <Text className="text-gray-400 text-xs line-through ml-2">
+                {oldPrice} ₺
+              </Text>
+            )}
+          </View>
+
+          {/* Rating */}
+          <View className="flex-row items-center mb-3">
+            <Icon name="star" size={16} color="#FBC02D" />
+            <Text className="text-gray-600 text-xs ml-1">{rating}</Text>
+          </View>
+
+          {/* Add to Cart Button */}
+          <TouchableOpacity
+            onPress={handleAddToCart}
+            disabled={loadingItems[id] || stock <= 0} // Update this line
+            className={`
+              flex-row items-center justify-center py-2 px-4 rounded-lg
+              ${stock <= 0
+                ? 'bg-gray-300'
+                : loadingItems[id] // Update this line
+                  ? 'bg-blue-400'
+                  : 'bg-blue-500 active:bg-blue-600'
+              }
+            `}
+          >
+            <Icon name="shopping-cart" size={18} color="#fff" />
+            <Text className="text-white font-medium text-sm ml-2">
+              {loadingItems[id] ? 'Ekleniyor...' : stock > 0 ? 'Sepete Ekle' : 'Stokta Yok'} {/* Update this line */}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </TouchableOpacity>
-    </TouchableOpacity>
+    </MotiView>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    width: '48%',
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    marginBottom: 16,
-    padding: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  image: {
-    width: '100%',
-    height: 150,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  price: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginRight: 6,
-  },
-  oldPrice: {
-    fontSize: 12,
-    color: '#666',
-    textDecorationLine: 'line-through',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  rating: {
-    fontSize: 12,
-    color: '#f39c12',
-  },
-  newBadge: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: '#2ecc71',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  newText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  discountBadge: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    backgroundColor: '#e74c3c',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  discountText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  addToCartButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 8,
-    flexDirection: 'row', // İkon ve metni yan yana göstermek için flexDirection eklendi
-    alignItems: 'center', // İkon ve metni dikey olarak ortala
-    justifyContent: 'center', // İkon ve metni yatay olarak ortala
-    marginTop: 8,
-  },
-  addToCartButtonDisabled: {
-    backgroundColor: '#bdc3c7',
-  },
-  addToCartButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginLeft: 4, // İkon ile metin arasına boşluk ekle
-  },
-});

@@ -20,6 +20,7 @@ interface CartItem {
 
 interface CartContextData {
     items: CartItem[];
+    loadingItems: { [key: number]: boolean }; // Add this line
     loading: boolean;
     addToCart: (productId: number, quantity: number) => Promise<void>;
     updateQuantity: (itemId: number, quantity: number) => Promise<void>;
@@ -37,6 +38,7 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth(); // Accessing user from AuthContext
     const [items, setItems] = useState<CartItem[]>([]);
+    const [loadingItems, setLoadingItems] = useState<{ [key: number]: boolean }>({}); // Add this line
     const [itemCount, setItemCount] = useState(0);
     const [loading, setLoading] = useState(false);
     const shippingCost = 15; // Sabit kargo ücreti
@@ -113,7 +115,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         try {
-            setLoading(true);
+            setLoadingItems(prev => ({ ...prev, [productId]: true })); // Update loading state for specific product
             const existingItem = items.find(item => item.product.id === productId);
 
             if (existingItem) {
@@ -151,7 +153,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             Alert.alert('Hata', error.response?.data?.message || 'Ürün sepete eklenirken bir hata oluştu');
         } finally {
-            setLoading(false);
+            setLoadingItems(prev => ({ ...prev, [productId]: false })); // Reset loading state for specific product
         }
     }, [items, fetchCart, user]);
 
@@ -277,6 +279,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         <CartContext.Provider
             value={{
                 items,
+                loadingItems, // Add this line
                 loading,
                 addToCart,
                 updateQuantity,
