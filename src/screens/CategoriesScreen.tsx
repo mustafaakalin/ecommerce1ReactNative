@@ -28,8 +28,9 @@ interface Category {
   is_active: boolean;
 }
 
-export const CategoriesScreen: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+export const CategoriesScreen = () => {
+  const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
+  
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

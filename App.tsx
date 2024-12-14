@@ -1,40 +1,40 @@
 // App.tsx
 import React from 'react';
-import { View, Text, ActivityIndicator } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import {View, Text, ActivityIndicator} from 'react-native';
+import {NavigationContainer} from '@react-navigation/native';
+import {createNativeStackNavigator} from '@react-navigation/native-stack';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { navigationRef } from './src/services/navigationService';
+import {navigationRef} from './src/services/navigationService';
 
 // Screens
-import { LoginScreen } from './src/screens/LoginScreen';
-import { RegisterScreen } from './src/screens/RegisterScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
-import { CategoryDetailScreen } from './src/screens/CategoryDetailScreen';
-import { CartScreen } from './src/screens/CartScreen';
-import { CategoriesScreen } from './src/screens/CategoriesScreen';
-import { ProfileScreen } from './src/screens/ProfileScreen';
+import {LoginScreen} from './src/screens/LoginScreen';
+import {RegisterScreen} from './src/screens/RegisterScreen';
+import {HomeScreen} from './src/screens/HomeScreen';
+import {ProductDetailScreen} from './src/screens/ProductDetailScreen';
+import {CategoryDetailScreen} from './src/screens/CategoryDetailScreen';
+import {CartScreen} from './src/screens/CartScreen';
+import {CategoriesScreen} from './src/screens/CategoriesScreen';
+import {ProfileScreen} from './src/screens/ProfileScreen';
 import CheckoutScreen from './src/screens/CheckoutScreen';
 
 // Providers
-import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { CartProvider, useCart } from './src/context/CartContext';
-import { CheckoutProvider } from './src/context/CheckoutContext'; // CheckoutProvider ekledik
-import { ProfileProvider } from './src/context/ProfileContext';
-import { useAddress } from './src/context/AddressContext';
+import {AuthProvider, useAuth} from './src/context/AuthContext';
+import {CartProvider, useCart} from './src/context/CartContext';
+import {CheckoutProvider} from './src/context/CheckoutContext'; // CheckoutProvider ekledik
+import {ProfileProvider} from './src/context/ProfileContext';
+import {useAddress} from './src/context/AddressContext';
 
 // nativewind tailwindcss
-import "./src/assets/css/global.css"
+import './src/assets/css/global.css';
 
 // Types
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
   Home: undefined;
-  ProductDetail: { slug: string };
-  CategoryDetail: { slug: string };
+  ProductDetail: {slug: string};
+  CategoryDetail: {slug: string};
   Checkout: undefined; // Checkout ekledik
 };
 
@@ -85,8 +85,8 @@ const TAB_OPTIONS = {
 };
 
 // Components
-const CartIcon: React.FC<{ color: string; size: number }> = ({ color, size }) => {
-  const { items, itemCount } = useCart();
+const CartIcon: React.FC<{color: string; size: number}> = ({color, size}) => {
+  const {items, itemCount} = useCart();
   const cartItemCount = items.length;
 
   return (
@@ -109,13 +109,12 @@ const MainTabs: React.FC = () => (
         paddingBottom: 5,
         height: 60,
       },
-    }}
-  >
+    }}>
     <Tab.Screen
       name="Home"
       component={HomeScreen}
       options={{
-        tabBarIcon: ({ color, size }) => (
+        tabBarIcon: ({color, size}) => (
           <Icon name="home" size={size} color={color} />
         ),
         title: 'Ana Sayfa',
@@ -125,7 +124,7 @@ const MainTabs: React.FC = () => (
       name="Categories"
       component={CategoriesScreen}
       options={{
-        tabBarIcon: ({ color, size }) => (
+        tabBarIcon: ({color, size}) => (
           <Icon name="category" size={size} color={color} />
         ),
         title: 'Kategoriler',
@@ -135,9 +134,7 @@ const MainTabs: React.FC = () => (
       name="Cart"
       component={CartScreen}
       options={{
-        tabBarIcon: ({ color, size }) => (
-          <CartIcon color={color} size={size} />
-        ),
+        tabBarIcon: ({color, size}) => <CartIcon color={color} size={size} />,
         title: 'Sepetim',
       }}
     />
@@ -145,7 +142,7 @@ const MainTabs: React.FC = () => (
       name="Profile"
       component={ProfileScreen}
       options={{
-        tabBarIcon: ({ color, size }) => (
+        tabBarIcon: ({color, size}) => (
           <Icon name="person" size={size} color={color} />
         ),
         title: 'Profilim',
@@ -155,11 +152,11 @@ const MainTabs: React.FC = () => (
 );
 
 const Navigation: React.FC = () => {
-  const { isAuthenticated, isInitialized } = useAuth();
+  const {isAuthenticated, isInitialized} = useAuth();
 
   if (!isInitialized) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
         <ActivityIndicator size="large" />
       </View>
     );
@@ -173,12 +170,12 @@ const Navigation: React.FC = () => {
           <Stack.Screen
             name="Login"
             component={LoginScreen}
-            options={{ headerShown: false }}
+            options={{headerShown: false}}
           />
           <Stack.Screen
             name="Register"
             component={RegisterScreen}
-            options={{ headerShown: false }}
+            options={{headerShown: false}}
           />
         </>
       ) : (
@@ -187,7 +184,7 @@ const Navigation: React.FC = () => {
           <Stack.Screen
             name="Home"
             component={MainTabs}
-            options={{ headerShown: false }}
+            options={{headerShown: false}}
           />
           <Stack.Screen
             name="ProductDetail"
@@ -199,11 +196,11 @@ const Navigation: React.FC = () => {
           />
           <Stack.Screen
             name="CategoryDetail"
-            component={CategoryDetailScreen}
-            options={{
-              title: 'Kategori Ürünleri',
-              headerBackTitleVisible: false,
-            }}
+              component={CategoryDetailScreen}
+              options={{
+                title: 'Category Detayı',
+                headerBackTitleVisible: false,
+              }}
           />
           <Stack.Screen
             name="Checkout"
@@ -223,7 +220,9 @@ const App: React.FC = () => (
   <NavigationContainer ref={navigationRef}>
     <AuthProvider>
       <CartProvider>
-        <CheckoutProvider> {/* CheckoutProvider ekledik */}
+        <CheckoutProvider>
+          {' '}
+          {/* CheckoutProvider ekledik */}
           <ProfileProvider>
             <Navigation />
           </ProfileProvider>

@@ -53,7 +53,7 @@ interface Product {
     stock: number; // Stok bilgisi eklendi
 }
 
-export const HomeScreen = () => { // navigat
+export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
     const { user, logout } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
