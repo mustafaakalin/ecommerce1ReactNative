@@ -43,7 +43,7 @@ export const ProductCard = ({
       from={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: 'timing', duration: 300 }}
-      className="w-[48%] mb-4"
+      className="w-full mb-4"
     >
       <TouchableOpacity
         onPress={onPress}

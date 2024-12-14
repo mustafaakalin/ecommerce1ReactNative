@@ -12,6 +12,11 @@ import { ProductCard } from '../components/ProductCard';
 import api from '../services/api';
 import { RootStackParamList } from '../types/navigation';
 
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import * as Icons from '@fortawesome/free-solid-svg-icons';
+
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi 
+import { MotiView } from 'moti';
 
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList, 'CategoryDetail'>;
@@ -24,6 +29,7 @@ interface Props {
 
 
 
+// 1. Update interfaces
 interface Product {
     id: number;
     name: string;
@@ -33,6 +39,14 @@ interface Product {
     is_new: boolean;
     discount: number;
     slug: string;
+    stock: number;
+    is_active: boolean;
+    is_featured: boolean;
+    description: string;
+    specifications: {
+        weight: number;
+        dimensions: string;
+    };
 }
 
 interface Category {
@@ -40,6 +54,14 @@ interface Category {
     name: string;
     description: string;
     products_count: number;
+    icon: string;
+    slug: string;
+    parent_id: number | null;
+    is_active: boolean;
+    sort_order: number;
+    products: Product[];
+    parent: Category | null;
+    children: Category[];
 }
 
 export const CategoryDetailScreen = ({ route, navigation }: Props) => {
@@ -54,13 +76,53 @@ export const CategoryDetailScreen = ({ route, navigation }: Props) => {
 
     const fetchCategory = async () => {
         try {
+            setLoading(true);
             const response = await api.get(`/categories/${slug}`);
-            setCategory(response.data);
-            navigation.setOptions({ title: response.data.name });
+            if (response.data?.data) {
+                setCategory(response.data.data);
+                setProducts(response.data.data.products || []);
+                navigation.setOptions({ title: response.data.data.name });
+            }
         } catch (error) {
             console.error('Error fetching category:', error);
+        } finally {
+            setLoading(false);
         }
     };
+
+    // Render category header with correct icon
+    const renderCategoryHeader = () => (
+        <MotiView
+            className="bg-white p-4 mb-2 shadow-sm"
+            from={{ opacity: 0, translateY: -20 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: 'timing', duration: 600 }}
+        >
+            <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                    <FontAwesomeIcon
+                        icon={Icons[category?.icon?.replace('fas fa-', '') as keyof typeof Icons] || Icons.faBox}
+                        size={24}
+                        color="#3b82f6"
+                    />
+                    <Text className="text-2xl font-bold ml-2 text-gray-800">
+                        {category?.name}
+                    </Text>
+                </View>
+                <Icon name="arrow-forward-ios" size={20} color="#6b7280" />
+            </View>
+            <Text className="text-gray-600 mt-2 text-base">
+                {category?.description}
+            </Text>
+            <View className="flex-row items-center mt-3">
+                <Icon name="shopping-bag" size={16} color="#6b7280" />
+                <Text className="text-gray-500 ml-2">
+                    {category?.products_count} ürün bulundu
+                </Text>
+            </View>
+        </MotiView>
+    );
+
 
     const fetchProducts = async (pageNumber: number, refresh = false) => {
         if (!hasMore && !refresh) return;
@@ -88,6 +150,7 @@ export const CategoryDetailScreen = ({ route, navigation }: Props) => {
         }
     };
 
+
     const onRefresh = async () => {
         setRefreshing(true);
         setPage(1);
@@ -107,99 +170,54 @@ export const CategoryDetailScreen = ({ route, navigation }: Props) => {
 
     useEffect(() => {
         fetchCategory();
-        fetchProducts(1);
     }, [slug]);
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+            <View className="flex-1 justify-center items-center bg-gray-50">
+                <MotiView
+                    from={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ type: 'timing', duration: 500 }}
+                >
+                    <ActivityIndicator size="large" color="#3b82f6" />
+                </MotiView>
             </View>
         );
     }
 
     return (
-        <View style={styles.container}>
-            {category && (
-                <View style={styles.headerContainer}>
-                    <Text style={styles.categoryName}>{category.name}</Text>
-                    <Text style={styles.description}>{category.description}</Text>
-                    <Text style={styles.productCount}>
-                        {category.products_count} ürün bulundu
-                    </Text>
-                </View>
-            )}
-
+        <View className="flex-1 bg-gray-50">
+            {category && renderCategoryHeader()}
             <FlatList
                 data={products}
-                renderItem={({ item }) => (
-                    <View style={styles.productContainer}>
+                renderItem={({ item, index }) => (
+                    <MotiView
+                        from={{ opacity: 0, translateY: 20 }}
+                        animate={{ opacity: 1, translateY: 0 }}
+                        transition={{ type: 'timing', delay: index * 100 }}
+                        className="flex-1 p-2"
+                    >
                         <ProductCard
+                            id={item.id}
                             name={item.name}
                             price={item.price}
                             oldPrice={item.old_price}
                             rating={item.rating}
                             isNew={item.is_new}
                             discount={item.discount}
+                            stock={item.stock}
                             onPress={() => navigation.navigate('ProductDetail', { slug: item.slug })}
                         />
-                    </View>
+                    </MotiView>
                 )}
                 keyExtractor={item => item.id.toString()}
                 numColumns={2}
-                contentContainerStyle={styles.productList}
+                className="p-2"
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                onEndReached={loadMore}
-                onEndReachedThreshold={0.1}
-                ListFooterComponent={() => (
-                    loadingMore ? (
-                        <ActivityIndicator style={styles.loadingMore} color="#007AFF" />
-                    ) : null
-                )}
             />
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    headerContainer: {
-        backgroundColor: '#fff',
-        padding: 16,
-        marginBottom: 8,
-    },
-    categoryName: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 8,
-    },
-    description: {
-        fontSize: 16,
-        color: '#666',
-        marginBottom: 8,
-    },
-    productCount: {
-        fontSize: 14,
-        color: '#666',
-    },
-    productList: {
-        padding: 8,
-    },
-    productContainer: {
-        flex: 1,
-        padding: 8,
-    },
-    loadingMore: {
-        padding: 16,
-    },
-});

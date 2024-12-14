@@ -17,6 +17,12 @@ import { CategoryCard } from '../components/CategoryCard';
 import { ProductCard } from '../components/ProductCard';
 import api from '../services/api';
 import { RootStackParamList } from '../types/navigation';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import * as Icons from '@fortawesome/free-solid-svg-icons';
+
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi 
+import { MotiView } from 'moti';
+
 
 // Navigation prop type tanımı
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -106,30 +112,46 @@ export const HomeScreen = () => { // navigat
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+            <View className="flex-1 justify-center items-center bg-gray-50">
+                <ActivityIndicator size="large" color="#6366F1" />
+                <Text className="mt-4 text-gray-600">Yükleniyor...</Text>
             </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.welcomeText}>Hoş geldin, {user?.name}</Text>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutButton}> {/* handleLogout'u kullanın */}
-                    <Text style={styles.logoutText}>Çıkış Yap</Text>
+        <SafeAreaView className="flex-1 bg-gray-50">
+            <MotiView
+                from={{ opacity: 0, translateY: -20 }}
+                animate={{ opacity: 1, translateY: 0 }}
+                className="flex-row justify-between items-center px-4 py-3 bg-white shadow-sm">
+                <View className="flex-row items-center space-x-2">
+                    <FontAwesomeIcon icon={Icons.faUser} size={20} color="#4F46E5" />
+                    <Text className="text-lg font-bold text-gray-800">Hoş geldin, {user?.name}</Text>
+                </View>
+                <TouchableOpacity
+                    onPress={handleLogout}
+                    className="flex-row items-center space-x-1 px-3 py-2 bg-red-50 rounded-full">
+                    <FontAwesomeIcon icon={Icons.faSignOutAlt} size={16} color="#EF4444" />
+                    <Text className="text-red-500 font-medium">Çıkış Yap</Text>
                 </TouchableOpacity>
-            </View>
+            </MotiView>
 
             <ScrollView
-                style={styles.content}
+                className="flex-1"
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                <View style={styles.categoriesSection}>
-                    <Text style={styles.sectionTitle}>Kategoriler</Text>
-                    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="px-4 py-6">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <Text className="text-xl font-bold text-gray-800">Kategoriler</Text>
+                        <FontAwesomeIcon icon={Icons.faThLarge} size={20} color="#6366F1" />
+                    </View>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="space-x-4">
                         {categories.map((category) => (
                             <CategoryCard
                                 key={category.id}
@@ -142,88 +164,36 @@ export const HomeScreen = () => { // navigat
                     </ScrollView>
                 </View>
 
-                <View style={styles.productsSection}>
-                    <Text style={styles.sectionTitle}>Ürünler</Text>
-                    <View style={styles.productsGrid}>
+                <View className="px-4 pb-6">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <Text className="text-xl font-bold text-gray-800">Ürünler</Text>
+                        <Icon name="shopping-bag" size={24} color="#6366F1" />
+                    </View>
+                    <View className="flex-row flex-wrap justify-between">
                         {products.map((product) => (
-                            <ProductCard
+                            <MotiView
                                 key={product.id}
-                                id={product.id}  // Burada product.id'nin doğru değeri aldığından emin olun
-                                name={product.name}
-                                price={product.price}
-                                oldPrice={product.old_price}
-                                rating={product.rating}
-                                isNew={product.is_new}
-                                discount={product.discount}
-                                images={product.images || []}  // Undefined kontrolü eklendi
-                                stock={product.stock}  // Stok bilgisi eklendi
-                                onPress={() => handleProductPress(product.slug)}
-                            />
+                                from={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ type: 'spring' }}
+                                className="w-[48%] mb-4">
+                                <ProductCard
+                                    id={product.id}
+                                    name={product.name}
+                                    price={product.price}
+                                    oldPrice={product.old_price}
+                                    rating={product.rating}
+                                    isNew={product.is_new}
+                                    discount={product.discount}
+                                    images={product.images || []}
+                                    stock={product.stock}
+                                    onPress={() => handleProductPress(product.slug)}
+                                />
+                            </MotiView>
                         ))}
                     </View>
                 </View>
             </ScrollView>
-        </SafeAreaView >
+        </SafeAreaView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f5f5f5',
-    },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        backgroundColor: '#fff',
-        borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
-    },
-    welcomeText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    logoutButton: {
-        padding: 8,
-    },
-    logoutText: {
-        color: '#ff3b30',
-    },
-    content: {
-        flex: 1,
-    },
-    categoriesSection: {
-        padding: 16,
-    },
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 12,
-    },
-    productsSection: {
-        padding: 16,
-    },
-    productsGrid: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
-    bottomNav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        padding: 12,
-        backgroundColor: '#fff',
-        borderTopWidth: 1,
-        borderTopColor: '#e0e0e0',
-    },
-    navItem: {
-        alignItems: 'center',
-    },
-});
