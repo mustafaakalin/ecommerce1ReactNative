@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native'; // Bu şekilde değiş
 import { NativeStackNavigationProp } from '@react-navigation/native-stack'; // Bu satırı ekleyin
 import { useAuth } from '../context/AuthContext';
 import { CategoryCard } from '../components/CategoryCard';
+import { BrandCard } from '../components/BrandCard';
 import { ProductCard } from '../components/ProductCard';
 import api from '../services/api';
 import { RootStackParamList } from '../types/navigation';
@@ -40,6 +41,15 @@ interface Category {
     slug: string;
 }
 
+
+interface Brand {
+    id: number;
+    name: string;
+    slug: string;
+    logo: string;
+    description: string;
+}
+
 interface Product {
     id: number;
     name: string;
@@ -57,6 +67,7 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
     const { user, logout } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -64,12 +75,15 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [categoriesResponse, productsResponse] = await Promise.all([
+            const [categoriesResponse, productsResponse, brandsResponse] = await Promise.all([
                 api.get('/categories'),
                 api.get('/products'),
+                api.get('/brands'),
             ]);
             setCategories(categoriesResponse.data);
             setProducts(productsResponse.data.data);
+            setBrands(brandsResponse.data);
+
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -143,6 +157,7 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
+                {/* KATEGORI */}
                 <View className="px-4 py-6">
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-xl font-bold text-gray-800">Kategoriler</Text>
@@ -164,6 +179,29 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                     </ScrollView>
                 </View>
 
+                {/* BRANDS */}
+
+                <View className="px-4 py-6">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <Text className="text-xl font-bold text-gray-800">Markalar</Text>
+                        <FontAwesomeIcon icon={Icons.faTags} size={20} color="#6366F1" />
+                    </View>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="space-x-4">
+                        {brands.map((brand) => (
+                            <BrandCard
+                                key={brand.id}
+                                name={brand.name}
+                                logo={brand.logo}
+                                onPress={() => navigation.navigate('CategoryDetail', { slug: brand.slug })}
+                            />
+                        ))}
+                    </ScrollView>
+                </View>
+
+                {/* PRODUCTS */}
                 <View className="px-4 pb-6">
                     <View className="flex-row items-center justify-between mb-4">
                         <Text className="text-xl font-bold text-gray-800">Ürünler</Text>
