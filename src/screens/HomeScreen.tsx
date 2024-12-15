@@ -23,7 +23,7 @@ import * as Icons from '@fortawesome/free-solid-svg-icons';
 
 import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edildi 
 import { MotiView } from 'moti';
-
+import { Pagination } from '../components/Pagination'; // Create this component
 
 // Navigation prop type tanımı
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -63,6 +63,18 @@ interface Product {
     stock: number; // Stok bilgisi eklendi
 }
 
+interface PaginationMeta {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+}
+
+interface PaginatedResponse {
+    data: Product[];
+    meta: PaginationMeta;
+}
+
 export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
     const { user, logout } = useAuth();
@@ -71,19 +83,25 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [paginationMeta, setPaginationMeta] = useState<PaginationMeta | null>(null);
 
-    const fetchData = async () => {
+    const fetchData = async (page = 1) => {
         try {
             setLoading(true);
-            const [categoriesResponse, productsResponse, brandsResponse] = await Promise.all([
+            const [categoriesResponse, brandsResponse] = await Promise.all([
                 api.get('/categories'),
-                api.get('/products'),
                 api.get('/brands'),
             ]);
+            
+            const productsResponse = await api.get(`/products?page=${page}`);
+            const paginatedData = productsResponse.data as PaginatedResponse;
+            
             setCategories(categoriesResponse.data);
-            setProducts(productsResponse.data.data);
             setBrands(brandsResponse.data);
-
+            setProducts(paginatedData.data);
+            setPaginationMeta(paginatedData.meta);
+            setCurrentPage(page);
         } catch (error) {
             console.error('Error fetching data:', error);
         } finally {
@@ -122,6 +140,10 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
         } catch (error) {
             console.error('Logout error:', error);
         }
+    };
+
+    const handlePageChange = (page: number) => {
+        fetchData(page);
     };
 
     if (loading) {
@@ -230,6 +252,20 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                             </MotiView>
                         ))}
                     </View>
+                    
+                    {paginationMeta && (
+                        <MotiView
+                            from={{ opacity: 0, translateY: 20 }}
+                            animate={{ opacity: 1, translateY: 0 }}
+                            transition={{ type: 'timing', duration: 500 }}
+                            className="mt-6">
+                            <Pagination
+                                currentPage={currentPage}
+                                totalPages={paginationMeta.last_page}
+                                onPageChange={handlePageChange}
+                            />
+                        </MotiView>
+                    )}
                 </View>
             </ScrollView>
         </SafeAreaView>
