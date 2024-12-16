@@ -22,6 +22,16 @@ const apisearch = axios.create({
   },
 });
 
+
+
+
+const apibaseweburl = axios.create({
+  baseURL: 'http://192.168.1.11:2121',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 export const setAuthToken = (token: string) => {
   api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 };
@@ -29,4 +39,5 @@ export const setAuthToken = (token: string) => {
 
 export {apioauth};
 export {apisearch};
+export {apibaseweburl};
 export default api;
