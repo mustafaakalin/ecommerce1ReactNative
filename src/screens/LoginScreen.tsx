@@ -1,16 +1,22 @@
-// src/screens/LoginScreen.tsx
 import React, { useState } from 'react';
 import {
     View,
     TextInput,
     TouchableOpacity,
     Text,
-    StyleSheet,
     ActivityIndicator,
     Alert,
 } from 'react-native';
 import { useAuth } from '../context/AuthContext';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import LinearGradient from 'react-native-linear-gradient';
+import { MotiView } from 'moti';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { 
+    faEnvelope, 
+    faLock, 
+    faRightToBracket 
+} from '@fortawesome/free-solid-svg-icons';
+import { faGoogle } from '@fortawesome/free-brands-svg-icons';
 
 export const LoginScreen = ({ navigation }: any) => {
     const [email, setEmail] = useState('');
@@ -25,7 +31,6 @@ export const LoginScreen = ({ navigation }: any) => {
 
         try {
             await login(email, password);
-            // Remove navigation.replace since App.tsx will handle navigation automatically
         } catch (error: any) {
             Alert.alert(
                 'Hata',
@@ -46,117 +51,110 @@ export const LoginScreen = ({ navigation }: any) => {
     };
 
     return (
-        <View style={styles.container}>
-            <TextInput
-                style={styles.input}
-                placeholder="Email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-            />
-            <TextInput
-                style={styles.input}
-                placeholder="Password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-            />
-            <TouchableOpacity
-                style={styles.button}
-                onPress={handleLogin}
-                disabled={loading}
+        <LinearGradient
+            colors={['#4c669f', '#3b5998', '#192f6a']}
+            className="flex-1 justify-center items-center px-4"
+        >
+            <MotiView
+                from={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ type: 'timing', duration: 1000 }}
+                className="w-full max-w-[400px] bg-white/90 p-6 rounded-2xl shadow-lg"
             >
-                {loading ? (
-                    <ActivityIndicator color="#fff" />
-                ) : (
-                    <Text style={styles.buttonText}>Giriş Yap</Text>
-                )}
-            </TouchableOpacity>
+                <Text className="text-2xl font-bold text-blue-800 text-center mb-8">
+                    Welcome Back!
+                </Text>
+                
+                <View className="mb-4">
+                    <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4 mb-4">
+                        <FontAwesomeIcon 
+                            icon={faEnvelope} 
+                            size={20} 
+                            color="#4c669f"
+                            className="mr-3" 
+                        />
+                        <TextInput
+                            className="flex-1 h-14 text-gray-800"
+                            placeholder="Email"
+                            placeholderTextColor="#666"
+                            value={email}
+                            onChangeText={setEmail}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
 
-            <View style={styles.dividerContainer}>
-                <View style={styles.divider} />
-                <Text style={styles.dividerText}>veya</Text>
-                <View style={styles.divider} />
-            </View>
+                    <View className="flex-row items-center bg-white border border-gray-200 rounded-xl px-4">
+                        <FontAwesomeIcon 
+                            icon={faLock} 
+                            size={20} 
+                            color="#4c669f"
+                            className="mr-3" 
+                        />
+                        <TextInput
+                            className="flex-1 h-14 text-gray-800"
+                            placeholder="Password"
+                            placeholderTextColor="#666"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                        />
+                    </View>
+                </View>
 
-            <TouchableOpacity
-                style={styles.googleButton}
-                onPress={handleGoogleSignIn}
-                disabled={loading}
-            >
-                <Icon name="google" size={24} color="#000" style={styles.googleIcon} />
-                <Text style={styles.googleButtonText}>Google ile Giriş Yap</Text>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    className="bg-blue-800 h-14 rounded-xl flex-row justify-center items-center mb-6"
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <>
+                            <FontAwesomeIcon 
+                                icon={faRightToBracket} 
+                                size={20} 
+                                color="#fff"
+                                className="mr-2" 
+                            />
+                            <Text className="text-white font-bold text-lg">
+                                Giriş Yap
+                            </Text>
+                        </>
+                    )}
+                </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.link}>Don't have an account? Register</Text>
-            </TouchableOpacity>
-        </View>
+                <View className="flex-row items-center my-6">
+                    <View className="flex-1 h-[1px] bg-gray-300" />
+                    <Text className="mx-4 text-gray-600">veya</Text>
+                    <View className="flex-1 h-[1px] bg-gray-300" />
+                </View>
+
+                <TouchableOpacity
+                    className="bg-white h-14 rounded-xl flex-row justify-center items-center mb-6 border border-gray-200"
+                    onPress={handleGoogleSignIn}
+                    disabled={loading}
+                >
+                    <FontAwesomeIcon 
+                        icon={faGoogle} 
+                        size={24} 
+                        color="#DB4437"
+                        className="mr-3" 
+                    />
+                    <Text className="text-gray-800 font-medium text-lg">
+                        Google ile Giriş Yap
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    onPress={() => navigation.navigate('Register')}
+                    className="py-4"
+                >
+                    <Text className="text-blue-800 text-center font-medium">
+                        Hesabın yok mu? Kayıt ol
+                    </Text>
+                </TouchableOpacity>
+            </MotiView>
+        </LinearGradient>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        justifyContent: 'center',
-    },
-    input: {
-        height: 50,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        marginBottom: 15,
-    },
-    button: {
-        backgroundColor: '#007AFF',
-        height: 50,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    link: {
-        color: '#007AFF',
-        textAlign: 'center',
-        marginTop: 15,
-    },
-    dividerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginVertical: 20,
-    },
-    divider: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#ddd',
-    },
-    dividerText: {
-        marginHorizontal: 10,
-        color: '#666',
-    },
-    googleButton: {
-        flexDirection: 'row',
-        backgroundColor: '#fff',
-        height: 50,
-        borderRadius: 8,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: '#ddd',
-    },
-    googleIcon: {
-        marginRight: 10,
-    },
-    googleButtonText: {
-        color: '#000',
-        fontSize: 16,
-        fontWeight: '500',
-    },
-});

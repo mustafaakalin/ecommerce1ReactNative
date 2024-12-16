@@ -16,7 +16,7 @@ const apioauth = axios.create({
   },
 });
 const apisearch = axios.create({
-  baseURL: 'http://192.168.1.11:2121/api/search',
+  baseURL: 'http://192.168.1.11:2121/api',
   headers: {
     'Content-Type': 'application/json',
   },
