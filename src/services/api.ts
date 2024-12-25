@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://192.168.1.11:2121/api/v1',
+  baseURL: 'https://ecommerce1.akalin.tech:443/api/v1',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -10,13 +10,13 @@ const api = axios.create({
 
 
 const apioauth = axios.create({
-  baseURL: 'http://192.168.1.11:2121/admin/oauth',
+  baseURL: 'https://ecommerce1.akalin.tech:443/admin/oauth',
   headers: {
     'Content-Type': 'application/json',
   },
 });
 const apisearch = axios.create({
-  baseURL: 'http://192.168.1.11:2121/api',
+  baseURL: 'https://ecommerce1.akalin.tech:443/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -26,7 +26,7 @@ const apisearch = axios.create({
 
 
 const apibaseweburl = axios.create({
-  baseURL: 'http://192.168.1.11:2121',
+  baseURL: 'https://ecommerce1.akalin.tech:443',
   headers: {
     'Content-Type': 'application/json',
   },

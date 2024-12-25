@@ -94,7 +94,7 @@ interface PaginatedResponse {
 }
 
 // API base URL'i doğru şekilde tanımla
-const API_BASE_URL = 'http://192.168.1.11:2121';
+const API_BASE_URL = 'https://ecommerce1.akalin.tech:443';
 
 // getImageSource fonksiyonunu güncelle
 const getImageSource = (product: Product) => {

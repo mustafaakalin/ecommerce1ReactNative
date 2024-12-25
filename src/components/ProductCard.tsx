@@ -18,7 +18,7 @@ interface ProductCardProps {
   onPress: () => void;
 }
 
-const BASE_URL = 'http://192.168.1.12:2121/storage/';
+const BASE_URL = 'https://ecommerce1.akalin.tech:443/storage/';
 
 export const ProductCard = ({
   id, name, price, oldPrice, rating, isNew,
@@ -27,7 +27,7 @@ export const ProductCard = ({
   const { addToCart, loadingItems } = useCart(); // Update this line
   const imageUrl = images.length > 0 && images[0].image_path
     ? `${BASE_URL}${images[0].image_path}`
-    : 'http://192.168.1.11:2121/default_product_image.jpg';
+    : 'https://ecommerce1.akalin.tech:443/default_product_image.jpg';
 
   const handleAddToCart = async () => {
     try {

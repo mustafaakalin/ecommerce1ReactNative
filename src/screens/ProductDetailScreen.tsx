@@ -64,7 +64,7 @@ interface Comment {
   };
 }
 
-const BASE_URL = 'http://192.168.1.12:2121/storage/';
+const BASE_URL = 'https://ecommerce1.akalin.tech:443/storage/';
 
 export const ProductDetailScreen = ({ route, navigation }: Props) => {
   const { slug } = route.params;
@@ -166,7 +166,7 @@ export const ProductDetailScreen = ({ route, navigation }: Props) => {
           ))
         ) : (
           <Image
-            source={{ uri: 'http://192.168.1.12:2121/default_product_image.jpg' }}
+              source={{ uri: 'https://ecommerce1.akalin.tech:443/default_product_image.jpg' }}
             className="w-screen h-[300px]"
             resizeMode="cover"
           />
