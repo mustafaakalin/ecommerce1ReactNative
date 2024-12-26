@@ -27,20 +27,20 @@ import Icon from 'react-native-vector-icons/MaterialIcons'; // Icon import edild
 import { MotiView } from 'moti';
 import { Pagination } from '../components/Pagination'; // Create this component
 
-import { 
-    faCog, 
-    faShoppingCart, 
-    faBook, 
-    faHome, 
-    faMusic, 
-    faCalendar, 
-    faStar, 
-    faMapMarker, 
-    faSearch, 
-    faUser, 
-    faCamera, 
-    faPhone, 
-    faEnvelope 
+import {
+    faCog,
+    faShoppingCart,
+    faBook,
+    faHome,
+    faMusic,
+    faCalendar,
+    faStar,
+    faMapMarker,
+    faSearch,
+    faUser,
+    faCamera,
+    faPhone,
+    faEnvelope
 } from '@fortawesome/free-solid-svg-icons';
 
 // Navigation prop type tanımı
@@ -50,15 +50,6 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 interface Props {
     navigation: NavigationProp;
 }
-
-interface Category {
-    id: number;
-    name: string;
-    icon: string;
-    products_count: number;
-    slug: string;
-}
-
 
 
 interface Product {
@@ -73,6 +64,8 @@ interface Product {
     slug: string;
     stock: number; // Stok bilgisi eklendi
 }
+
+
 
 interface PaginationMeta {
     current_page: number;
@@ -127,9 +120,9 @@ const ProductItem = ({ product, onPress }: { product: Product; onPress: () => vo
                 />
                 {/* Hata durumunda gösterilecek fallback görüntü */}
                 <FastImage
-                    style={{ 
-                        width: '100%', 
-                        height: '100%', 
+                    style={{
+                        width: '100%',
+                        height: '100%',
                         position: 'absolute',
                         opacity: 0 // Yalnızca ana resim yüklenemezse görünür olacak
                     }}
@@ -194,24 +187,7 @@ const categoryIcons: { [key: string]: any } = {
     'fas fa-envelope': faEnvelope,
 };
 
-// Kategori ikonu için helper fonksiyonu güncelle
-const getCategoryIcon = (iconName: string) => {
-    // 'fas fa-' prefix'ini kaldır ve camelCase'e çevir
-    const iconKey = iconName
-        .replace('fas fa-', '')
-        .split('-')
-        .map((part, index) => 
-            index === 0 ? part : part.charAt(0).toUpperCase() + part.slice(1)
-        )
-        .join('');
 
-    // Icons objesinden dinamik olarak icon'u al
-    const iconKey2 = `fa${iconKey.charAt(0).toUpperCase()}${iconKey.slice(1)}`;
-    console.log('Icon Key:', iconKey2); // Debug için
-
-    // Icons objesinden icon'u al veya varsayılan icon'u döndür
-    return (Icons as any)[iconKey2] || Icons.faCog;
-};
 
 export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
@@ -226,16 +202,11 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const fetchData = async (page = 1) => {
         try {
             setLoading(true);
-            const [categoriesResponse] = await Promise.all([
-                api.get('/categories'),
-  
-            ]);
-            
+
+
             const productsResponse = await api.get(`/products?page=${page}`);
             const paginatedData = productsResponse.data as PaginatedResponse;
-            
-            setCategories(categoriesResponse.data);
-            // setBrands(brandsResponse.data);
+
             setProducts(paginatedData.data);
             setPaginationMeta(paginatedData.meta);
             setCurrentPage(page);
@@ -256,10 +227,6 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
         fetchData();
     }, []);
 
-    const handleCategoryPress = (slug: string) => {
-        // Kategori detay sayfasına yönlendirme yapılacak
-        navigation.navigate('CategoryDetail', { slug });
-    };
 
     const handleProductPress = (slug: string) => {
         // Ürün detay sayfasına yönlendirme yapılacak
@@ -309,46 +276,13 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                     stock={product.stock}
                     onPress={() => handleProductPress(product.slug)}
                 />
-                
+
             ))}
         </View>
     );
 
 
 
-    const renderCategories = () => {
-        // Debug için
-        console.log('Categories data:', categories);
-        
-        return (
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="space-x-4"
-            >
-                {categories?.map((category) => (
-                    <TouchableOpacity
-                        key={category.id}
-                        onPress={() => handleCategoryPress(category.slug)}
-                        className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 w-32"
-                    >
-                        <View className="w-12 h-12 bg-indigo-100 rounded-xl items-center justify-center mb-3">
-                            <FontAwesomeIcon 
-                                icon={getCategoryIcon(category.icon)} 
-                                size={24} 
-                                color="#4F46E5"
-                                onError={() => console.log('Icon error:', category.icon)} // Hata durumunda log
-                            />
-                        </View>
-                        <Text className="font-semibold text-gray-800">{category.name}</Text>
-                        <Text className="text-xs text-gray-500 mt-1">
-                            {category.products_count} Ürün
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
-        );
-    };
 
     return (
         <SafeAreaView className="flex-1 bg-gray-50">
@@ -379,17 +313,7 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
             >
-                {/* Categories Section */}
-                <View className="px-6 py-6">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <Text className="text-2xl font-bold text-gray-800">Kategoriler</Text>
-                        <View className="flex-row items-center space-x-2">
-                            <Text className="text-indigo-600 text-sm">Tümünü Gör</Text>
-                            <FontAwesomeIcon icon={Icons.faChevronRight} size={14} color="#4F46E5" />
-                        </View>
-                    </View>
-                    {renderCategories()}
-                </View>
+
 
 
 
@@ -412,13 +336,12 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                             <TouchableOpacity
                                 onPress={() => handlePageChange(currentPage - 1)}
                                 disabled={currentPage === 1}
-                                className={`w-10 h-10 rounded-full items-center justify-center ${
-                                    currentPage === 1 ? 'bg-gray-100' : 'bg-indigo-100'
-                                }`}>
-                                <FontAwesomeIcon 
-                                    icon={Icons.faChevronLeft} 
-                                    size={16} 
-                                    color={currentPage === 1 ? '#9CA3AF' : '#4F46E5'} 
+                                className={`w-10 h-10 rounded-full items-center justify-center ${currentPage === 1 ? 'bg-gray-100' : 'bg-indigo-100'
+                                    }`}>
+                                <FontAwesomeIcon
+                                    icon={Icons.faChevronLeft}
+                                    size={16}
+                                    color={currentPage === 1 ? '#9CA3AF' : '#4F46E5'}
                                 />
                             </TouchableOpacity>
                             <Text className="text-gray-600">
@@ -427,13 +350,12 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                             <TouchableOpacity
                                 onPress={() => handlePageChange(currentPage + 1)}
                                 disabled={currentPage === paginationMeta.last_page}
-                                className={`w-10 h-10 rounded-full items-center justify-center ${
-                                    currentPage === paginationMeta.last_page ? 'bg-gray-100' : 'bg-indigo-100'
-                                }`}>
-                                <FontAwesomeIcon 
-                                    icon={Icons.faChevronRight} 
-                                    size={16} 
-                                    color={currentPage === paginationMeta.last_page ? '#9CA3AF' : '#4F46E5'} 
+                                className={`w-10 h-10 rounded-full items-center justify-center ${currentPage === paginationMeta.last_page ? 'bg-gray-100' : 'bg-indigo-100'
+                                    }`}>
+                                <FontAwesomeIcon
+                                    icon={Icons.faChevronRight}
+                                    size={16}
+                                    color={currentPage === paginationMeta.last_page ? '#9CA3AF' : '#4F46E5'}
                                 />
                             </TouchableOpacity>
                         </View>
