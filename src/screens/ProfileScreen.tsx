@@ -106,6 +106,7 @@ export const ProfileScreen: React.FC = () => {
       zip_code: address.zip_code,
       is_default: address.is_default,
     });
+    console.log('Editing address:', address.id);
     setModalVisible(true);
   };
 

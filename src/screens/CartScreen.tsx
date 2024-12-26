@@ -101,7 +101,7 @@ export const CartScreen = () => {
             <View key={item.id} className="flex-row items-center p-4 bg-white mb-2 rounded-lg shadow">
               <Image
                 source={{
-                  uri: 'https://ecommerce1.akalin.tech/default_product_image.jpg',
+                  uri: item.product.image || 'https://ecommerce1.akalin.tech/default_product_image.jpg',
                 }}
                 className="w-20 h-20 mr-4 rounded"
               />
@@ -112,7 +112,7 @@ export const CartScreen = () => {
                   <TouchableOpacity
                     onPress={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                     disabled={item.quantity <= 1}
-                    className="bg-gray-200 px-3 py-1 rounded-full"
+                    className={`bg-gray-200 px-3 py-1 rounded-full ${item.quantity <= 1 ? 'opacity-50' : ''}`}
                   >
                     <Text className="text-gray-700 text-xl">-</Text>
                   </TouchableOpacity>
@@ -159,3 +159,5 @@ export const CartScreen = () => {
     </View>
   );
 };
+
+export default CartScreen;

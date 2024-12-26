@@ -66,10 +66,14 @@ export const CheckoutProvider: React.FC = ({ children }) => {
     const fetchUserDetails = async () => {
       try {
         const response = await api.get('/user');
-        setUser(response.data.data);
-        setAddresses(response.data.data.addresses);
-      } catch (err) {
-        setError('An error occurred while fetching user details.');
+        if (response.status === 200) {
+          setUser(response.data.data);
+          setAddresses(response.data.data.addresses);
+        } else {
+          setError('Kullanıcı bilgileri alınırken bir hata oluştu.');
+        }
+      } catch (err: any) {
+        setError('Kullanıcı bilgileri alınırken bir hata oluştu.');
       }
     };
 
@@ -88,13 +92,36 @@ export const CheckoutProvider: React.FC = ({ children }) => {
 
       console.log('Checkout data:', checkoutData);
       const response = await api.post('/checkout', checkoutData);
-      if (response.data.status === 'success') {
-        Alert.alert('Success', 'Order created successfully.');
+
+      if (response.status === 200 && response.data.status === 'success') {
+        Alert.alert('Başarılı', 'Sipariş başarıyla oluşturuldu.');
+        // Sepeti boşalt veya kullanıcıyı yönlendir
       } else {
-        setError(response.data.message);
+        const message = response.data.message;
+        // Hata mesajının string olup olmadığını kontrol et
+        if (typeof message === 'string') {
+          setError(message);
+        } else if (typeof message === 'object') {
+          // Örneğin, message bir nesne ise belirli bir alanı al
+          setError(message.detail || 'İsteğiniz işlenirken bir hata oluştu.1');
+        } else {
+          setError('İsteğiniz işlenirken bir hata oluştu.2');
+        }
       }
-    } catch (err) {
-      setError('An error occurred while processing your request.');
+    } catch (err: any) {
+      if (err.response && err.response.data && err.response.data.message) {
+        const message = err.response.data.message;
+        // Hata mesajının string olup olmadığını kontrol et
+        if (typeof message === 'string') {
+          setError(message);
+        } else if (typeof message === 'object') {
+          setError(message.detail || 'İsteğiniz işlenirken bir hata oluştu.3');
+        } else {
+          setError('İsteğiniz işlenirken bir hata oluştu.4');
+        }
+      } else {
+        setError('İsteğiniz işlenirken bir hata oluştu.5');
+      }
     } finally {
       setLoading(false);
     }

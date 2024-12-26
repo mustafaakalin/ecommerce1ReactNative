@@ -221,8 +221,6 @@ const App: React.FC = () => (
     <AuthProvider>
       <CartProvider>
         <CheckoutProvider>
-          {' '}
-          {/* CheckoutProvider ekledik */}
           <ProfileProvider>
             <Navigation />
           </ProfileProvider>

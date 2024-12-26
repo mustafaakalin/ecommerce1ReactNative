@@ -4,7 +4,6 @@ import {
   Text, 
   TextInput, 
   TouchableOpacity, 
-  StyleSheet, 
   ActivityIndicator, 
   ScrollView,
   KeyboardAvoidingView,
@@ -13,12 +12,14 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { useCheckout } from '../context/CheckoutContext';
+import api from '../services/api'; // Yeni import eklendi
+import axios from 'axios'; // Yeni import eklendi
 
-const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = false, containerStyle = {} }) => (
-  <View style={[styles.inputContainer, containerStyle]}>
-    <Icon name={icon} size={24} color="#666" style={styles.inputIcon} />
+const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = false, containerStyle = '' }) => (
+  <View className={`flex-row items-center bg-white border border-gray-300 rounded-lg p-3 ${containerStyle}`}>
+    <Icon name={icon} size={24} color="#666" />
     <TextInput
-      style={styles.inputField}
+      className="flex-1 text-gray-700"
       placeholder={placeholder}
       value={value}
       onChangeText={onChangeText}
@@ -28,203 +29,243 @@ const InputField = ({ icon, placeholder, value, onChangeText, secureTextEntry = 
   </View>
 );
 
-const CheckoutScreen: React.FC = () => {
-  const { checkout, loading, error, addresses, user } = useCheckout();
+export const CheckoutScreen: React.FC = () => {
+  const { checkout, loading, error } = useCheckout();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
-    address: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: '',
     phone: '',
     cardName: '',
     cardNumber: '',
     expireMonth: '',
     expireYear: '',
     cvc: '',
-    paymentMethod: 'credit_card', // payment_method ekledik ve değerini credit_card olarak ayarladık
-    identityNumber: '', // identity_number ekledik
+    paymentMethod: 'credit_card',
+    identityNumber: '',
+    address_id: null, // Yeni alan eklendi
   });
+  const [addresses, setAddresses] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true); // Yeni durum eklendi
+  const [errorUser, setErrorUser] = useState(null); // Yeni durum eklendi
 
   useEffect(() => {
-    if (addresses && addresses.length > 0) {
-      const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
-      setFormData(prev => ({
-        ...prev,
-        firstName: defaultAddress.first_name,
-        lastName: defaultAddress.last_name,
-        address: defaultAddress.address,
-        city: defaultAddress.city,
-        state: defaultAddress.state,
-        zipCode: defaultAddress.zip_code,
-        country: defaultAddress.country,
-        phone: defaultAddress.phone,
-      }));
-    }
+    const fetchUserData = async () => {
+      try {
+        const response = await api.get('/user');
+        const userData = response.data.data;
+        setUser(userData);
+        setAddresses(userData.addresses);
+        const defaultAddress = userData.addresses.find(addr => addr.is_default) || userData.addresses[0];
+        setFormData(prev => ({
+          ...prev,
+          firstName: defaultAddress.first_name,
+          lastName: defaultAddress.last_name,
+          phone: defaultAddress.phone,
+          address_id: defaultAddress.id, // address_id güncellendi
+        }));
+        console.log('Default address:', defaultAddress);
+        setLoadingUser(false);
+      } catch (error) {
+        setErrorUser('Kullanıcı verileri alınırken bir hata oluştu.');
+        setLoadingUser(false);
+      }
+    };
 
-    if (user) {
-      setFormData(prev => ({
-        ...prev,
-        email: user.email,
-        identityNumber: user.identity_number || '',
-      }));
-    }
-  }, [addresses, user]);
+    fetchUserData();
+  }, []);
 
   const updateField = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleCheckout = async () => {
+    // Form doğrulaması ekle
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.phone ||
+      !formData.cardName ||
+      !formData.cardNumber ||
+      !formData.expireMonth ||
+      !formData.expireYear ||
+      !formData.cvc ||
+      !formData.identityNumber
+    ) {
+      setError('Lütfen tüm alanları doldurun.');
+      return;
+    }
+
+    // Email ve telefon formatını kontrol et
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setError('Geçerli bir e-posta adresi giriniz.');
+      return;
+    }
+
+    const phoneRegex = /^[0-9]{10,15}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      setError('Geçerli bir telefon numarası giriniz.');
+      return;
+    }
+
+    // Kart bilgilerini basitçe doğrula
+    if (formData.cardNumber.length < 12 || formData.cardNumber.length > 19) {
+      setError('Geçerli bir kart numarası giriniz.');
+      return;
+    }
+
+    if (formData.cvc.length < 3 || formData.cvc.length > 4) {
+      setError('Geçerli bir CVC numarası giriniz.');
+      return;
+    }
+
+    // Daha fazla doğrulama ekleyebilirsiniz
+
     const data = {
       first_name: formData.firstName,
       last_name: formData.lastName,
       email: formData.email,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      zip_code: formData.zipCode,
-      country: formData.country,
       phone: formData.phone,
       card_name: formData.cardName,
       card_number: formData.cardNumber,
       expire_month: formData.expireMonth,
       expire_year: formData.expireYear,
       cvc: formData.cvc,
-      payment_method: formData.paymentMethod, // payment_method ekledik
-      identity_number: formData.identityNumber, // identity_number ekledik
+      payment_method: formData.paymentMethod,
+      identity_number: formData.identityNumber,
+      address_id: formData.address_id, // address_id eklendi
     };
 
     await checkout(data);
   };
 
+  if (loadingUser) {
+    return (
+      <View className="flex-1 justify-center items-center">
+        <ActivityIndicator size="large" color="#4B9CD3" />
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-gray-50">
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.container}
+        className="flex-1"
       >
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <View style={styles.header}>
-            <Icon name="shopping-cart" size={30} color="#333" />
-            <Text style={styles.title}>Checkout</Text>
+        <ScrollView showsVerticalScrollIndicator={false} className="px-6 py-4">
+          <View className="flex-row items-center mb-6">
+            <Icon name="shopping-cart" size={30} color="#4B9CD3" />
+            <Text className="text-2xl font-semibold text-gray-800 ml-3">Checkout</Text>
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
+          <View className="mb-6">
+            <Text className="text-xl font-medium text-gray-700 mb-4">Kişisel Bilgiler</Text>
             <InputField
               icon="person"
-              placeholder="First Name"
+              placeholder="İsim"
               value={formData.firstName}
               onChangeText={(text) => updateField('firstName', text)}
+              containerStyle="mb-4"
             />
             <InputField
               icon="person"
-              placeholder="Last Name"
+              placeholder="Soyisim"
               value={formData.lastName}
               onChangeText={(text) => updateField('lastName', text)}
+              containerStyle="mb-4"
             />
             <InputField
               icon="email"
-              placeholder="Email"
+              placeholder="E-posta"
               value={formData.email}
               onChangeText={(text) => updateField('email', text)}
+              containerStyle="mb-4"
             />
             <InputField
               icon="phone"
-              placeholder="Phone"
+              placeholder="Telefon"
               value={formData.phone}
               onChangeText={(number) => updateField('phone', number)}
+              containerStyle="mb-4"
             />
             <InputField
               icon="badge"
-              placeholder="Identity Number"
+              placeholder="Kimlik Numarası"
               value={formData.identityNumber}
               onChangeText={(text) => updateField('identityNumber', text)}
+              containerStyle="mb-4"
             />
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Shipping Address</Text>
-            <InputField
-              icon="home"
-              placeholder="Address"
-              value={formData.address}
-              onChangeText={(text) => updateField('address', text)}
-            />
-            <InputField
-              icon="location-city"
-              placeholder="City"
-              value={formData.city}
-              onChangeText={(text) => updateField('city', text)}
-            />
-            <InputField
-              icon="map"
-              placeholder="State"
-              value={formData.state}
-              onChangeText={(text) => updateField('state', text)}
-            />
-            <InputField
-              icon="location-on"
-              placeholder="Zip Code"
-              value={formData.zipCode}
-              onChangeText={(text) => updateField('zipCode', text)}
-            />
-            <InputField
-              icon="public"
-              placeholder="Country"
-              value={formData.country}
-              onChangeText={(text) => updateField('country', text)}
-            />
+          {/* Yeni Gönderim Adresi Seç Bölümü */}
+          <View className="mb-6">
+            <Text className="text-xl font-medium text-gray-700 mb-4">Yeni Gönderim Adresi Seç</Text>
+            {addresses.map(addr => (
+              <TouchableOpacity
+                key={addr.id}
+                className={`flex-row items-center p-3 border rounded-lg mb-2 ${formData.address_id === addr.id ? 'border-blue-500' : 'border-gray-300'}`}
+                onPress={() => updateField('address_id', addr.id)}
+              >
+                <Icon name={formData.address_id === addr.id ? "radio-button-checked" : "radio-button-unchecked"} size={24} color="#4B9CD3" />
+                <Text className="ml-3 text-gray-700">{addr.full_address}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Payment Information</Text>
+          <View className="mb-6">
+            <Text className="text-xl font-medium text-gray-700 mb-4">Ödeme Bilgileri</Text>
             <InputField
               icon="credit-card"
-              placeholder="Card Holder Name"
+              placeholder="Kart Sahibinin Adı"
               value={formData.cardName}
               onChangeText={(text) => updateField('cardName', text)}
+              containerStyle="mb-4"
             />
             <InputField
               icon="payment"
-              placeholder="Card Number"
+              placeholder="Kart Numarası"
               value={formData.cardNumber}
               onChangeText={(text) => updateField('cardNumber', text)}
+              containerStyle="mb-4"
             />
-            <View style={styles.cardDetails}>
-              <View style={styles.expiryContainer}>
-                <InputField
-                  icon="date-range"
-                  placeholder="MM"
-                  value={formData.expireMonth}
-                  onChangeText={(text) => updateField('expireMonth', text)}
-                />
-                <InputField
-                  icon="date-range"
-                  placeholder="YYYY"
-                  value={formData.expireYear}
-                  onChangeText={(text) => updateField('expireYear', text)}
-                />
-              </View>
+            <View className="flex-row mb-4">
+              <InputField
+                icon="date-range"
+                placeholder="AA"
+                value={formData.expireMonth}
+                onChangeText={(text) => updateField('expireMonth', text)}
+                containerStyle="flex-1 mr-2"
+              />
+              <InputField
+                icon="date-range"
+                placeholder="YYYY"
+                value={formData.expireYear}
+                onChangeText={(text) => updateField('expireYear', text)}
+                containerStyle="flex-1 ml-2 mr-2"
+              />
               <InputField
                 icon="lock"
                 placeholder="CVC"
                 value={formData.cvc}
                 onChangeText={(text) => updateField('cvc', text)}
                 secureTextEntry
-                containerStyle={styles.cvcInputContainer}
+                containerStyle="flex-1 ml-2"
               />
             </View>
           </View>
 
-          {error && <Text style={styles.error}>{error}</Text>}
+          {error && (
+            <Text className="text-red-500 text-center mb-4">
+              {typeof error === 'string' ? error : 'Bir hata oluştu.'}
+            </Text>
+          )}
 
           <TouchableOpacity 
-            style={styles.checkoutButton} 
+            className="flex-row items-center justify-center bg-green-600 px-6 py-3 rounded-lg shadow"
             onPress={handleCheckout}
             disabled={loading}
           >
@@ -233,7 +274,7 @@ const CheckoutScreen: React.FC = () => {
             ) : (
               <>
                 <Icon name="check-circle" size={24} color="#fff" />
-                <Text style={styles.checkoutButtonText}>Complete Purchase</Text>
+                <Text className="text-white ml-3 text-lg">Satın Almayı Tamamla</Text>
               </>
             )}
           </TouchableOpacity>
@@ -242,94 +283,5 @@ const CheckoutScreen: React.FC = () => {
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginLeft: 10,
-    color: '#333',
-  },
-  section: {
-    backgroundColor: '#fff',
-    padding: 20,
-    marginVertical: 10,
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 15,
-    color: '#333',
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f9f9f9',
-    borderRadius: 8,
-    marginBottom: 12,
-    paddingHorizontal: 12,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  inputField: {
-    flex: 1,
-    height: 45,
-    color: '#333',
-  },
-  cardDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  expiryContainer: {
-    flex: 1,
-    marginRight: 10,
-  },
-  cvcInputContainer: {
-    width: 100,
-  },
-  checkoutButton: {
-    backgroundColor: '#007AFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 10,
-    margin: 20,
-  },
-  checkoutButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  error: {
-    color: '#ff3b30',
-    textAlign: 'center',
-    marginTop: 10,
-    fontSize: 14,
-  }
-});
 
 export default CheckoutScreen;
