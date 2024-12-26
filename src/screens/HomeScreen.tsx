@@ -60,13 +60,6 @@ interface Category {
 }
 
 
-interface Brand {
-    id: number;
-    name: string;
-    slug: string;
-    logo: string;
-    description: string;
-}
 
 interface Product {
     id: number;
@@ -182,48 +175,7 @@ const ProductItem = ({ product, onPress }: { product: Product; onPress: () => vo
     </MotiView>
 );
 
-// Marka kartı bileşenini de güncelleyelim
-// Marka logoları için helper fonksiyon
-const getBrandLogoSource = (brand: Brand) => {
-    if (brand.logo) {
-        // Logo yolunu API_BASE_URL ile birleştir ve images klasörünü ekle
-        const logoUrl = `${API_BASE_URL}/${brand.logo}`;
-        console.log('Brand Logo URL:', logoUrl); // Debug için
 
-        return {
-            uri: logoUrl,
-            priority: FastImage.priority.normal,
-            cache: FastImage.cacheControl.immutable,
-        };
-    }
-    return {
-        uri: `${API_BASE_URL}/images/brands/default_brand_image.jpg`,
-        priority: FastImage.priority.normal,
-        cache: FastImage.cacheControl.immutable,
-    };
-};
-
-const BrandItem = ({ brand, onPress }: { brand: Brand; onPress: () => void }) => {
-    console.log('Brand data:', brand); // Debug için
-    
-    return (
-        <TouchableOpacity
-            onPress={onPress}
-            className="bg-gray-50 p-3 rounded-xl border border-gray-100 w-28 items-center"
-            activeOpacity={0.7}
-        >
-            <View className="w-16 h-16 bg-white rounded-lg shadow-sm items-center justify-center mb-2">
-                <FastImage
-                    style={{ width: 48, height: 48 }}
-                    source={getBrandLogoSource(brand)}
-                    resizeMode={FastImage.resizeMode.contain}
-                    onError={() => console.log('Error loading brand logo:', brand.logo)} // Hata durumunda log
-                />
-            </View>
-            <Text className="text-sm font-medium text-gray-800 text-center">{brand.name}</Text>
-        </TouchableOpacity>
-    );
-};
 
 // Kategori ikonları için mapping objesi
 const categoryIcons: { [key: string]: any } = {
@@ -265,7 +217,6 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const navigation = useNavigation<NavigationProp>(); // Bu satırı ekleyinion prop'unu kaldırdık
     const { user, logout } = useAuth();
     const [categories, setCategories] = useState<Category[]>([]);
-    const [brands, setBrands] = useState<Brand[]>([]);
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -275,16 +226,16 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
     const fetchData = async (page = 1) => {
         try {
             setLoading(true);
-            const [categoriesResponse, brandsResponse] = await Promise.all([
+            const [categoriesResponse] = await Promise.all([
                 api.get('/categories'),
-                api.get('/brands'),
+  
             ]);
             
             const productsResponse = await api.get(`/products?page=${page}`);
             const paginatedData = productsResponse.data as PaginatedResponse;
             
             setCategories(categoriesResponse.data);
-            setBrands(brandsResponse.data);
+            // setBrands(brandsResponse.data);
             setProducts(paginatedData.data);
             setPaginationMeta(paginatedData.meta);
             setCurrentPage(page);
@@ -363,22 +314,7 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
         </View>
     );
 
-    // Brands section'da değişiklik yapıyoruz
-    const renderBrands = () => (
-        <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            className="space-x-4"
-        >
-            {brands.map((brand) => (
-                <BrandItem
-                    key={brand.id}
-                    brand={brand}
-                    onPress={() => navigation.navigate('CategoryDetail', { slug: brand.slug })}
-                />
-            ))}
-        </ScrollView>
-    );
+
 
     const renderCategories = () => {
         // Debug için
@@ -455,14 +391,7 @@ export const HomeScreen = () => { // navigatsyon prop'unu kaldırdık
                     {renderCategories()}
                 </View>
 
-                {/* Brands Section */}
-                <View className="px-6 py-6 bg-white">
-                    <View className="flex-row items-center justify-between mb-4">
-                        <Text className="text-2xl font-bold text-gray-800">Markalar</Text>
-                        <FontAwesomeIcon icon={Icons.faTags} size={20} color="#4F46E5" />
-                    </View>
-                    {renderBrands()}
-                </View>
+
 
                 {/* Products Section */}
                 <View className="px-6 py-6">
